@@ -1,0 +1,119 @@
+//
+//  ScheduleCard.swift
+//  AI_planner
+//
+//  Created by Judy459 on 2/19/26.
+//
+
+import SwiftUI
+
+struct ScheduleCard: View {
+    let task: TodoTask
+    @State private var isHovered = false
+    
+    var eventColor: EventColor {
+        let eventType = task.eventType
+        return AppTheme.eventColors.first(where: { $0.name.lowercased() == eventType.rawValue.lowercased() }) ?? AppTheme.eventColors.last!
+    }
+    
+    var timeString: String {
+        guard let startTime = task.startTime else { return "" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: startTime)
+    }
+    
+    var durationString: String {
+        guard let startTime = task.startTime, let endTime = task.endTime else { return "" }
+        let duration = Int(endTime.timeIntervalSince(startTime) / 60)
+        return "\(duration)m"
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
+            HStack(spacing: AppTheme.Spacing.md) {
+                // Icon Badge
+                Image(systemName: eventColor.icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(eventColor.primary)
+                    .clipShape(Circle())
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(task.title)
+                        .font(AppTheme.Typography.titleMedium)
+                        .foregroundColor(AppTheme.textPrimary)
+                    
+                    if !task.description.isEmpty {
+                        Text(task.description)
+                            .font(AppTheme.Typography.bodySmall)
+                            .foregroundColor(AppTheme.textSecondary)
+                            .lineLimit(1)
+                    }
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(timeString)
+                        .font(AppTheme.Typography.labelLarge)
+                        .foregroundColor(AppTheme.textPrimary)
+                    
+                    Text(durationString)
+                        .font(AppTheme.Typography.labelSmall)
+                        .foregroundColor(AppTheme.textTertiary)
+                }
+            }
+        }
+        .padding(AppTheme.Spacing.lg)
+        .background(eventColor.light)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
+                .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
+        )
+        .scaleEffect(isHovered ? 1.02 : 1.0)
+        .shadow(color: eventColor.primary.opacity(isHovered ? 0.2 : 0.08), radius: isHovered ? 12 : 8)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.2)) {
+                isHovered = hovering
+            }
+        }
+    }
+}
+
+#Preview {
+    let calendar = Calendar.current
+    let today = Date()
+    let sampleTask = TodoTask(
+        title: "Gym",
+        description: "Morning workout session",
+        isCompleted: false,
+        dueDate: today,
+        startTime: calendar.date(bySettingHour: 8, minute: 0, second: 0, of: today),
+        endTime: calendar.date(bySettingHour: 9, minute: 0, second: 0, of: today),
+        priority: .medium,
+        createdAt: today,
+        eventType: .gym
+    )
+    
+    VStack(spacing: AppTheme.Spacing.md) {
+        ScheduleCard(task: sampleTask)
+        
+        let classTask = TodoTask(
+            title: "Class",
+            description: "Swift UI Advanced Techniques",
+            isCompleted: false,
+            dueDate: today,
+            startTime: calendar.date(bySettingHour: 10, minute: 0, second: 0, of: today),
+            endTime: calendar.date(bySettingHour: 12, minute: 0, second: 0, of: today),
+            priority: .high,
+            createdAt: today,
+            eventType: .class_
+        )
+        ScheduleCard(task: classTask)
+    }
+    .padding(AppTheme.Spacing.lg)
+    .background(AppTheme.bgPrimary)
+}

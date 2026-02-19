@@ -1,0 +1,209 @@
+//
+//  DailyDetailView.swift
+//  AI_planner
+//
+//  Created by Judy459 on 2/19/26.
+//
+
+import SwiftUI
+
+struct DailyDetailView: View {
+    var date: Date
+    var tasks: [TodoTask]
+    @ObservedObject var viewModel: TodoViewModel
+    @Binding var isPresented: Bool
+    var namespace: Namespace.ID
+    
+    @State private var showAddEventSheet = false
+    @State private var editingTask: TodoTask?
+    
+    var body: some View {
+        ZStack {
+            AppTheme.bgPrimary
+                .ignoresSafeArea()
+            
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    Button(action: { isPresented = false }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 14, weight: .semibold))
+                            Text("Back")
+                        }
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(AppTheme.secondaryTeal)
+                    }
+                    
+                    Spacer()
+                    
+                    // Date Title
+                    VStack(alignment: .center, spacing: 0) {
+                        Text(date, format: .dateTime.weekday(.wide))
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(AppTheme.textPrimary)
+                        
+                        Text(date, format: .dateTime.month().day())
+                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                            .foregroundColor(AppTheme.textSecondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Button(action: { showAddEventSheet = true }) {
+                        Image(systemName: "pencil")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(AppTheme.secondaryTeal)
+                    }
+                }
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.vertical, AppTheme.Spacing.lg)
+                
+                Divider()
+                    .background(AppTheme.dividerColor)
+                
+                // Time-block list
+                ScrollView {
+                    if tasks.isEmpty {
+                        VStack(spacing: AppTheme.Spacing.lg) {
+                            Spacer()
+                                .frame(height: 60)
+                            
+                            Image(systemName: "calendar.badge.plus")
+                                .font(.system(size: 48, weight: .light))
+                                .foregroundColor(AppTheme.textTertiary)
+                            
+                            Text("No events scheduled")
+                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .foregroundColor(AppTheme.textPrimary)
+                            
+                            Text("Add an event to get started")
+                                .font(.system(size: 13, weight: .regular, design: .rounded))
+                                .foregroundColor(AppTheme.textSecondary)
+                            
+                            Button(action: { showAddEventSheet = true }) {
+                                Text("Add Event")
+                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 44)
+                                    .background(AppTheme.secondaryTeal)
+                                    .cornerRadius(12)
+                            }
+                            .padding(.horizontal, AppTheme.Spacing.lg)
+                            .padding(.top, AppTheme.Spacing.lg)
+                            
+                            Spacer()
+                        }
+                    } else {
+                        VStack(alignment: .leading, spacing: AppTheme.Spacing.xl) {
+                            ForEach(tasks, id: \.id) { task in
+                                TimeBlockCard(task: task, viewModel: viewModel)
+                            }
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+                        .padding(.vertical, AppTheme.Spacing.lg)
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showAddEventSheet) {
+            AddEventSheet(
+                viewModel: viewModel,
+                isPresented: $showAddEventSheet,
+                selectedDate: date
+            )
+        }
+    }
+}
+
+// MARK: - Time Block Card
+struct TimeBlockCard: View {
+    var task: TodoTask
+    @ObservedObject var viewModel: TodoViewModel
+    
+    var body: some View {
+        let eventColor = getEventColor(for: task)
+        
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(task.title)
+                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .foregroundColor(eventColor.dark)
+                    
+                    if !task.description.isEmpty {
+                        Text(task.description)
+                            .font(.system(size: 13, weight: .regular, design: .rounded))
+                            .foregroundColor(AppTheme.textSecondary)
+                    }
+                }
+                
+                Spacer()
+                
+                // Time display
+                if let startTime = task.startTime, let endTime = task.endTime {
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(CalendarHelper.timeString(from: startTime))
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundColor(eventColor.dark)
+                        
+                        Text("to \(CalendarHelper.timeString(from: endTime))")
+                            .font(.system(size: 10, weight: .regular, design: .rounded))
+                            .foregroundColor(AppTheme.textSecondary)
+                    }
+                }
+            }
+            
+            // Completion toggle
+            HStack {
+                Button(action: {
+                    var updatedTask = task
+                    updatedTask.isCompleted.toggle()
+                    viewModel.updateTodo(updatedTask)
+                }) {
+                    HStack(spacing: AppTheme.Spacing.sm) {
+                        Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(task.isCompleted ? AppTheme.secondaryTeal : AppTheme.textTertiary)
+                        
+                        Text(task.isCompleted ? "Completed" : "Mark Complete")
+                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .foregroundColor(task.isCompleted ? AppTheme.secondaryTeal : AppTheme.textSecondary)
+                    }
+                }
+                
+                Spacer()
+                
+                Button(action: {
+                    viewModel.deleteTodo(at: IndexSet(integer: viewModel.todos.firstIndex(where: { $0.id == task.id }) ?? 0))
+                }) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.red)
+                }
+            }
+        }
+        .padding(AppTheme.Spacing.lg)
+        .background(eventColor.light)
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
+        )
+    }
+    
+    func getEventColor(for task: TodoTask) -> EventColor {
+        return AppTheme.eventColors.first { $0.name.lowercased() == task.eventType.rawValue.lowercased() } ?? AppTheme.eventColors[4]
+    }
+}
+
+#Preview {
+    DailyDetailView(
+        date: Date(),
+        tasks: [],
+        viewModel: TodoViewModel(),
+        isPresented: .constant(true),
+        namespace: Namespace().wrappedValue
+    )
+}
