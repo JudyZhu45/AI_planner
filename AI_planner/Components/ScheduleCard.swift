@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScheduleCard: View {
     let task: TodoTask
+    let onDelete: (() -> Void)?
     @State private var isHovered = false
     
     var eventColor: EventColor {
@@ -65,14 +66,14 @@ struct ScheduleCard: View {
                         .foregroundColor(AppTheme.textTertiary)
                 }
             }
+            .padding(AppTheme.Spacing.lg)
+            .background(eventColor.light)
+            .cornerRadius(AppTheme.Radius.lg)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
+                    .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
+            )
         }
-        .padding(AppTheme.Spacing.lg)
-        .background(eventColor.light)
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
-        )
         .scaleEffect(isHovered ? 1.02 : 1.0)
         .shadow(color: eventColor.primary.opacity(isHovered ? 0.2 : 0.08), radius: isHovered ? 12 : 8)
         .onHover { hovering in
@@ -99,7 +100,7 @@ struct ScheduleCard: View {
     )
     
     VStack(spacing: AppTheme.Spacing.md) {
-        ScheduleCard(task: sampleTask)
+        ScheduleCard(task: sampleTask, onDelete: nil)
         
         let classTask = TodoTask(
             title: "Class",
@@ -112,7 +113,7 @@ struct ScheduleCard: View {
             createdAt: today,
             eventType: .class_
         )
-        ScheduleCard(task: classTask)
+        ScheduleCard(task: classTask, onDelete: nil)
     }
     .padding(AppTheme.Spacing.lg)
     .background(AppTheme.bgPrimary)

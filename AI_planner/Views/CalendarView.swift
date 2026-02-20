@@ -8,13 +8,13 @@
 import SwiftUI
 
 struct CalendarView: View {
-    @StateObject private var todoViewModel = TodoViewModel()
-    
+    @ObservedObject var viewModel: TodoViewModel
+
     var body: some View {
-        MindfulCalendarView(viewModel: todoViewModel)
+        MindfulCalendarView(viewModel: viewModel)
     }
 }
 
 #Preview {
-    CalendarView()
+    CalendarView(viewModel: TodoViewModel())
 }

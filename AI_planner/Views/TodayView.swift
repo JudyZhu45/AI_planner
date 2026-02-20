@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct TodayView: View {
-    @StateObject private var viewModel = TodoViewModel()
+    @ObservedObject var viewModel: TodoViewModel
     @State private var showAddEventSheet = false
     
     // Get today's scheduled events (with time)
@@ -101,71 +101,90 @@ struct TodayView: View {
                 .background(AppTheme.bgSecondary)
                 .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
                 
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: AppTheme.Spacing.xxl) {
-                        // Schedule Timeline Section
-                        if !todayScheduledEvents.isEmpty {
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
-                                SectionHeader(title: "Schedule", icon: "clock.fill")
-                                
-                                VStack(spacing: AppTheme.Spacing.md) {
-                                    ForEach(todayScheduledEvents) { task in
-                                        ScheduleCard(task: task)
+                // Use a List here so swipeActions work reliably on rows (left-swipe to reveal delete)
+                List {
+                    // Schedule Timeline Section
+                    if !todayScheduledEvents.isEmpty {
+                        Section(header: SectionHeader(title: "Schedule", icon: "clock.fill")) {
+                            ForEach(todayScheduledEvents) { task in
+                                ScheduleCard(
+                                    task: task,
+                                    onDelete: {
+                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                                            viewModel.deleteTodo(at: IndexSet(integer: index))
+                                        }
+                                    }
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                                            viewModel.deleteTodo(at: IndexSet(integer: index))
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash.fill")
                                     }
                                 }
                             }
-                            .padding(AppTheme.Spacing.lg)
                         }
-                        
-                        // Todo Checklist Section
-                        if !todayTodos.isEmpty {
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
-                                SectionHeader(title: "To Do", icon: "checklist")
-                                
-                                VStack(spacing: AppTheme.Spacing.md) {
-                                    ForEach(todayTodos) { task in
-                                        TodoChecklistItem(
-                                            task: task,
-                                            onToggle: {
-                                                viewModel.toggleTodoCompletion(task)
-                                            },
-                                            onDelete: {
-                                                if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
-                                                    viewModel.deleteTodo(at: IndexSet(integer: index))
-                                                }
-                                            }
-                                        )
-                                    }
-                                }
-                            }
-                            .padding(AppTheme.Spacing.lg)
-                        }
-                        
-                        // Empty State
-                        if todayScheduledEvents.isEmpty && todayTodos.isEmpty {
-                            VStack(spacing: AppTheme.Spacing.lg) {
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 48))
-                                    .foregroundColor(AppTheme.secondaryTeal.opacity(0.5))
-                                
-                                VStack(spacing: AppTheme.Spacing.sm) {
-                                    Text("No tasks scheduled")
-                                        .font(AppTheme.Typography.headlineSmall)
-                                        .foregroundColor(AppTheme.textPrimary)
-                                    
-                                    Text("Tap the + button to add an event or task")
-                                        .font(AppTheme.Typography.bodySmall)
-                                        .foregroundColor(AppTheme.textSecondary)
-                                }
-                            }
-                            .frame(maxHeight: .infinity)
-                            .padding(AppTheme.Spacing.xxl)
-                        }
-                        
-                        Spacer(minLength: AppTheme.Spacing.xxl)
                     }
-                    .padding(.top, AppTheme.Spacing.lg)
+
+                    // Todo Checklist Section
+                    if !todayTodos.isEmpty {
+                        Section(header: SectionHeader(title: "To Do", icon: "checklist")) {
+                            ForEach(todayTodos) { task in
+                                TodoChecklistItem(
+                                    task: task,
+                                    onToggle: {
+                                        viewModel.toggleTodoCompletion(task)
+                                    },
+                                    onDelete: {
+                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                                            viewModel.deleteTodo(at: IndexSet(integer: index))
+                                        }
+                                    }
+                                )
+                                .listRowBackground(Color.clear)
+                                .listRowSeparator(.hidden)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                                            viewModel.deleteTodo(at: IndexSet(integer: index))
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash.fill")
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Empty State
+                    if todayScheduledEvents.isEmpty && todayTodos.isEmpty {
+                        VStack(spacing: AppTheme.Spacing.lg) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 48))
+                                .foregroundColor(AppTheme.secondaryTeal.opacity(0.5))
+
+                            VStack(spacing: AppTheme.Spacing.sm) {
+                                Text("No tasks scheduled")
+                                    .font(AppTheme.Typography.headlineSmall)
+                                    .foregroundColor(AppTheme.textPrimary)
+
+                                Text("Tap the + button to add an event or task")
+                                    .font(AppTheme.Typography.bodySmall)
+                                    .foregroundColor(AppTheme.textSecondary)
+                            }
+                        }
+                        .frame(maxHeight: .infinity)
+                        .padding(AppTheme.Spacing.xxl)
+                        .listRowBackground(Color.clear)
+                    }
                 }
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .padding(.top, AppTheme.Spacing.lg)
             }
         }
         .sheet(isPresented: $showAddEventSheet) {
@@ -242,5 +261,5 @@ struct FilterButton: View {
 }
 
 #Preview {
-    TodayView()
+    TodayView(viewModel: TodoViewModel())
 }

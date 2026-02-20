@@ -21,9 +21,9 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 // Tab content
                 if selectedTab == 0 {
-                    TodayView()
+                    TodayView(viewModel: todoViewModel)
                 } else if selectedTab == 1 {
-                    CalendarView()
+                    CalendarView(viewModel: todoViewModel)
                 } else if selectedTab == 2 {
                     AIChatView()
                 } else {
