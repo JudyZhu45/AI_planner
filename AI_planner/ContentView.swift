@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    var authManager: AuthManager
     @State private var selectedTab = 0
     @StateObject private var todoViewModel = TodoViewModel()
     @State private var showAddEventSheet = false
@@ -27,7 +28,7 @@ struct ContentView: View {
                 } else if selectedTab == 2 {
                     AIChatView()
                 } else {
-                    ProfileView()
+                    ProfileView(authManager: authManager)
                 }
                 
                 // Custom Tab Bar
@@ -70,5 +71,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(authManager: AuthManager())
 }

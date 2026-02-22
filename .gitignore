@@ -1,0 +1,83 @@
+# Xcode
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
+DerivedData/
+.build/
+
+# Xcode IDEay Files
+.DS_Store
+*.swiftpm
+*.xcodeproj/*.resolved
+
+# Build artifacts
+*.app
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Package Manager
+Packages/
+.swiftpm/
+
+# CocoaPods
+Pods/
+Podfile.lock
+*.podspec.json
+
+# Carthage
+Carthage/Build/
+
+# Compiled files
+*.o
+*.a
+*.so
+
+# Environment variables
+.env
+.env.local
+*.pem
+*.key
+
+# Temporary files
+*.swp
+*.swo
+*~
+.temp/
+
+# IDE
+.vscode/
+.idea/
+*.swiftpm/
+.swiftpm
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# AWS/Amplify
+AmplifyConfig/aws-exports.js
+amplifyconfiguration.json
+awsconfiguration.json
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules (if applicable)
+node_modules/
+
+# Credentials and secrets
+.credentials
+secrets.json
+keychain.db

@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ProfileView: View {
+    var authManager: AuthManager
+    
     var body: some View {
         ZStack {
             AppTheme.bgPrimary
@@ -49,7 +51,7 @@ struct ProfileView: View {
                             .frame(width: 100, height: 100)
                             
                             VStack(spacing: AppTheme.Spacing.sm) {
-                                Text("Welcome to AI Planner")
+                                Text(authManager.userEmail ?? "AI Planner User")
                                     .font(AppTheme.Typography.headlineSmall)
                                     .foregroundColor(AppTheme.textPrimary)
                                 
@@ -130,6 +132,33 @@ struct ProfileView: View {
                             .padding(AppTheme.Spacing.lg)
                         }
                         
+                        // Sign Out
+                        Button {
+                            Task {
+                                await authManager.signOut()
+                            }
+                        } label: {
+                            HStack(spacing: AppTheme.Spacing.md) {
+                                Image(systemName: "rectangle.portrait.and.arrow.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(AppTheme.accentCoral)
+                                
+                                Text("Sign Out")
+                                    .font(AppTheme.Typography.titleMedium)
+                                    .foregroundColor(AppTheme.accentCoral)
+                                
+                                Spacer()
+                            }
+                            .padding(AppTheme.Spacing.lg)
+                            .background(AppTheme.bgSecondary)
+                            .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
+                                    .stroke(AppTheme.accentCoral.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+                        
                         Spacer(minLength: AppTheme.Spacing.xxl)
                     }
                 }
@@ -202,5 +231,5 @@ struct SettingsRow: View {
 }
 
 #Preview {
-    ProfileView()
+    ProfileView(authManager: AuthManager())
 }
