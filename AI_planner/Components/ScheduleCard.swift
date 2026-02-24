@@ -34,17 +34,28 @@ struct ScheduleCard: View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
             HStack(spacing: AppTheme.Spacing.md) {
                 // Icon Badge
-                Image(systemName: eventColor.icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(AppTheme.textInverse)
-                    .frame(width: 36, height: 36)
-                    .background(eventColor.primary)
-                    .clipShape(Circle())
+                ZStack {
+                    Image(systemName: eventColor.icon)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(AppTheme.textInverse)
+                        .frame(width: 36, height: 36)
+                        .background(task.isCompleted ? AppTheme.textTertiary : eventColor.primary)
+                        .clipShape(Circle())
+                    
+                    if task.isCompleted {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundColor(AppTheme.secondaryTeal)
+                            .background(Circle().fill(AppTheme.bgSecondary).frame(width: 16, height: 16))
+                            .offset(x: 14, y: -14)
+                    }
+                }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(task.title)
                         .font(AppTheme.Typography.titleMedium)
-                        .foregroundColor(AppTheme.textPrimary)
+                        .foregroundColor(task.isCompleted ? AppTheme.textTertiary : AppTheme.textPrimary)
+                        .strikethrough(task.isCompleted)
                     
                     if !task.description.isEmpty {
                         Text(task.description)
@@ -59,7 +70,7 @@ struct ScheduleCard: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(timeString)
                         .font(AppTheme.Typography.labelLarge)
-                        .foregroundColor(AppTheme.textPrimary)
+                        .foregroundColor(task.isCompleted ? AppTheme.textTertiary : AppTheme.textPrimary)
                     
                     Text(durationString)
                         .font(AppTheme.Typography.labelSmall)
@@ -67,11 +78,11 @@ struct ScheduleCard: View {
                 }
             }
             .padding(AppTheme.Spacing.lg)
-            .background(eventColor.light)
+            .background(task.isCompleted ? eventColor.light.opacity(0.5) : eventColor.light)
             .cornerRadius(AppTheme.Radius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                    .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
+                    .stroke(eventColor.primary.opacity(task.isCompleted ? 0.15 : 0.3), lineWidth: 1)
             )
         }
         .scaleEffect(isHovered ? 1.02 : 1.0)

@@ -250,17 +250,12 @@ struct SelectedDayPreviewView: View {
             }
             
             if tasks.isEmpty {
-                VStack(spacing: AppTheme.Spacing.md) {
-                    Image(systemName: "calendar.badge.plus")
-                        .font(.system(size: 36, weight: .light))
-                        .foregroundColor(AppTheme.secondaryTeal.opacity(0.4))
-                    
-                    Text("No events scheduled")
-                        .font(AppTheme.Typography.bodyMedium)
-                        .foregroundColor(AppTheme.textSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, AppTheme.Spacing.lg)
+                EmptyStateView(
+                    icon: "calendar.badge.plus",
+                    title: "No events scheduled",
+                    subtitle: "Tap \"View All\" to add events for this day",
+                    compact: true
+                )
                 .background(AppTheme.bgTertiary)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             } else {

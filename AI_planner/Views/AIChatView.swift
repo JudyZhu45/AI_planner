@@ -8,22 +8,11 @@
 import SwiftUI
 
 struct AIChatView: View {
-    @State private var messages: [Message] = []
+    @ObservedObject var viewModel: TodoViewModel
+    @StateObject private var chatViewModel = ChatViewModel()
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
-    
-    let initialMessages = [
-        Message(
-            content: "👋 Hi! I'm your AI planning assistant. I can help you organize your schedule, optimize your time, and keep you on track with your goals.",
-            sender: .ai,
-            timestamp: Date(timeIntervalSinceNow: -120)
-        ),
-        Message(
-            content: "What would you like to focus on today?",
-            sender: .ai,
-            timestamp: Date(timeIntervalSinceNow: -60)
-        ),
-    ]
+    @State private var showMenu = false
     
     var body: some View {
         ZStack {
@@ -40,10 +29,10 @@ struct AIChatView: View {
                         
                         HStack(spacing: 4) {
                             Circle()
-                                .fill(Color.green)
+                                .fill(chatViewModel.isTyping ? AppTheme.secondaryTeal : Color.green)
                                 .frame(width: 8, height: 8)
                             
-                            Text("Always available")
+                            Text(chatViewModel.isTyping ? "Thinking..." : "Online")
                                 .font(AppTheme.Typography.labelSmall)
                                 .foregroundColor(AppTheme.textSecondary)
                         }
@@ -51,7 +40,21 @@ struct AIChatView: View {
                     
                     Spacer()
                     
-                    Button(action: {}) {
+                    Menu {
+                        Button {
+                            chatViewModel.clearHistory()
+                        } label: {
+                            Label("New Chat", systemImage: "plus.bubble")
+                        }
+                        
+                        Divider()
+                        
+                        Button(role: .destructive) {
+                            chatViewModel.clearHistory()
+                        } label: {
+                            Label("Clear Chat", systemImage: "trash")
+                        }
+                    } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(AppTheme.textSecondary)
@@ -65,24 +68,27 @@ struct AIChatView: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(.vertical, showsIndicators: false) {
                         VStack(spacing: AppTheme.Spacing.md) {
-                            ForEach(messages) { message in
+                            ForEach(chatViewModel.messages) { message in
                                 MessageBubble(message: message)
                                     .id(message.id)
                             }
                             
-                            Spacer(minLength: AppTheme.Spacing.xl)
+                            // Invisible anchor at the very bottom
+                            Color.clear
+                                .frame(height: 1)
+                                .id("bottomAnchor")
                         }
                         .padding(.top, AppTheme.Spacing.lg)
                         .padding(.bottom, AppTheme.Spacing.lg)
                     }
-                    .onChange(of: messages.count) { _ in
-                        withAnimation {
-                            scrollProxy.scrollTo(messages.last?.id, anchor: .bottom)
-                        }
-                    }
                     .onAppear {
-                        messages = initialMessages
-                        scrollProxy.scrollTo(messages.last?.id, anchor: .bottom)
+                        scrollProxy.scrollTo("bottomAnchor", anchor: .bottom)
+                    }
+                    .onChange(of: chatViewModel.messages.count) {
+                        scrollToBottom(scrollProxy)
+                    }
+                    .onChange(of: chatViewModel.messages.last?.content) {
+                        scrollToBottom(scrollProxy)
                     }
                 }
                 
@@ -94,13 +100,16 @@ struct AIChatView: View {
                             .foregroundColor(AppTheme.textPrimary)
                             .focused($isInputFocused)
                             .textFieldStyle(.plain)
+                            .onSubmit { sendMessage() }
                         
                         Button(action: sendMessage) {
                             Image(systemName: "arrow.up.circle.fill")
                                 .font(.system(size: 22))
-                                .foregroundColor(inputText.trimmingCharacters(in: .whitespaces).isEmpty ? AppTheme.textTertiary : AppTheme.secondaryTeal)
+                                .foregroundColor(
+                                    canSend ? AppTheme.secondaryTeal : AppTheme.textTertiary
+                                )
                         }
-                        .disabled(inputText.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .disabled(!canSend)
                     }
                     .padding(AppTheme.Spacing.md)
                     .background(AppTheme.bgSecondary)
@@ -127,31 +136,29 @@ struct AIChatView: View {
                 )
             }
         }
+        .onAppear {
+            chatViewModel.configure(with: viewModel)
+        }
+    }
+    
+    private var canSend: Bool {
+        !inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !chatViewModel.isTyping
     }
     
     private func sendMessage() {
-        let userMessage = inputText.trimmingCharacters(in: .whitespaces)
-        guard !userMessage.isEmpty else { return }
-        
-        messages.append(Message(content: userMessage, sender: .user, timestamp: Date()))
+        guard canSend else { return }
+        let text = inputText
         inputText = ""
-        
-        // Simulate AI response
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            let aiResponses = [
-                "That's a great observation! Let me analyze your schedule and suggest some optimizations.",
-                "I can help with that. Based on your calendar, I recommend blocking off focused time in the morning.",
-                "Excellent point. Let me update your priorities to align with that goal.",
-                "I see you're balancing multiple tasks. I'd suggest tackling the high-priority items first.",
-                "Great question! Here's what I think would work best for your schedule...",
-            ]
-            
-            let randomResponse = aiResponses.randomElement() ?? "I'm here to help!"
-            messages.append(Message(content: randomResponse, sender: .ai, timestamp: Date()))
+        chatViewModel.sendMessage(text)
+    }
+    
+    private func scrollToBottom(_ proxy: ScrollViewProxy) {
+        withAnimation {
+            proxy.scrollTo("bottomAnchor", anchor: .bottom)
         }
     }
 }
 
 #Preview {
-    AIChatView()
+    AIChatView(viewModel: .preview)
 }

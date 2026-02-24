@@ -81,3 +81,8 @@ node_modules/
 .credentials
 secrets.json
 keychain.db
+Secrets.xcconfig
+
+# Resume and personal documents
+RESUME.md
+

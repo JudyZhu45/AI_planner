@@ -32,16 +32,25 @@ class TodoViewModel: ObservableObject {
         )
         todos.append(newTodo)
         saveTodos()
+        NotificationManager.shared.scheduleNotification(for: newTodo)
     }
     
     func updateTodo(_ todo: TodoTask) {
         if let index = todos.firstIndex(where: { $0.id == todo.id }) {
             todos[index] = todo
             saveTodos()
+            if todo.isCompleted {
+                NotificationManager.shared.cancelNotification(for: todo)
+            } else {
+                NotificationManager.shared.scheduleNotification(for: todo)
+            }
         }
     }
     
     func deleteTodo(at indexSet: IndexSet) {
+        for index in indexSet {
+            NotificationManager.shared.cancelNotification(for: todos[index])
+        }
         todos.remove(atOffsets: indexSet)
         saveTodos()
     }
@@ -49,6 +58,30 @@ class TodoViewModel: ObservableObject {
     func toggleTodoCompletion(_ todo: TodoTask) {
         if let index = todos.firstIndex(where: { $0.id == todo.id }) {
             todos[index].isCompleted.toggle()
+            saveTodos()
+            if todos[index].isCompleted {
+                NotificationManager.shared.cancelNotification(for: todos[index])
+            } else {
+                NotificationManager.shared.scheduleNotification(for: todos[index])
+            }
+        }
+    }
+    
+    /// Add a fully-formed TodoTask (used by AI chat service)
+    func addEvent(_ task: TodoTask) {
+        var newTask = task
+        newTask.id = UUID()
+        newTask.createdAt = Date()
+        todos.append(newTask)
+        saveTodos()
+        NotificationManager.shared.scheduleNotification(for: newTask)
+    }
+    
+    /// Delete a task by its UUID (used by AI chat service)
+    func deleteTodoById(_ id: UUID) {
+        if let index = todos.firstIndex(where: { $0.id == id }) {
+            NotificationManager.shared.cancelNotification(for: todos[index])
+            todos.remove(at: index)
             saveTodos()
         }
     }

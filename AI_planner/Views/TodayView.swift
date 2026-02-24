@@ -45,9 +45,10 @@ struct TodayView: View {
     }
     
     var completionPercentage: Int {
-        guard !todayTodos.isEmpty else { return 0 }
-        let completed = todayTodos.filter { $0.isCompleted }.count
-        return Int(Double(completed) / Double(todayTodos.count) * 100)
+        let allTodayTasks = todayScheduledEvents + todayTodos
+        guard !allTodayTasks.isEmpty else { return 0 }
+        let completed = allTodayTasks.filter { $0.isCompleted }.count
+        return Int(Double(completed) / Double(allTodayTasks.count) * 100)
     }
     
     var body: some View {
@@ -132,6 +133,17 @@ struct TodayView: View {
                                         Label("Delete", systemImage: "trash.fill")
                                     }
                                 }
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        viewModel.toggleTodoCompletion(task)
+                                    } label: {
+                                        Label(
+                                            task.isCompleted ? "Undo" : "Complete",
+                                            systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
+                                        )
+                                    }
+                                    .tint(AppTheme.secondaryTeal)
+                                }
                             }
                         }
                     }
@@ -166,30 +178,32 @@ struct TodayView: View {
                                         Label("Delete", systemImage: "trash.fill")
                                     }
                                 }
+                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                    Button {
+                                        viewModel.toggleTodoCompletion(task)
+                                    } label: {
+                                        Label(
+                                            task.isCompleted ? "Undo" : "Complete",
+                                            systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
+                                        )
+                                    }
+                                    .tint(AppTheme.secondaryTeal)
+                                }
                             }
                         }
                     }
 
                     // Empty State
                     if todayScheduledEvents.isEmpty && todayTodos.isEmpty {
-                        VStack(spacing: AppTheme.Spacing.lg) {
-                            Image(systemName: "sparkles")
-                                .font(.system(size: 48))
-                                .foregroundColor(AppTheme.secondaryTeal.opacity(0.5))
-
-                            VStack(spacing: AppTheme.Spacing.sm) {
-                                Text("No tasks scheduled")
-                                    .font(AppTheme.Typography.headlineSmall)
-                                    .foregroundColor(AppTheme.textPrimary)
-
-                                Text("Tap the + button to add an event or task")
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.textSecondary)
-                            }
-                        }
-                        .frame(maxHeight: .infinity)
-                        .padding(AppTheme.Spacing.xxl)
+                        EmptyStateView(
+                            icon: "sparkles",
+                            title: "No tasks for today",
+                            subtitle: "Start planning your day by adding events or tasks",
+                            buttonTitle: "Add Event",
+                            onAction: { showAddEventSheet = true }
+                        )
                         .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
                 }
                 .listStyle(.plain)

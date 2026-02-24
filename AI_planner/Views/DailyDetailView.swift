@@ -65,36 +65,13 @@ struct DailyDetailView: View {
                 // Time-block list
                 ScrollView {
                     if tasks.isEmpty {
-                        VStack(spacing: AppTheme.Spacing.lg) {
-                            Spacer()
-                                .frame(height: 60)
-                            
-                            Image(systemName: "calendar.badge.plus")
-                                .font(.system(size: 48, weight: .light))
-                                .foregroundColor(AppTheme.textTertiary)
-                            
-                            Text("No events scheduled")
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
-                                .foregroundColor(AppTheme.textPrimary)
-                            
-                            Text("Add an event to get started")
-                                .font(.system(size: 13, weight: .regular, design: .rounded))
-                                .foregroundColor(AppTheme.textSecondary)
-                            
-                            Button(action: { showAddEventSheet = true }) {
-                                Text("Add Event")
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                    .foregroundColor(AppTheme.textInverse)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 44)
-                                    .background(AppTheme.secondaryTeal)
-                                    .cornerRadius(AppTheme.Radius.md)
-                            }
-                            .padding(.horizontal, AppTheme.Spacing.lg)
-                            .padding(.top, AppTheme.Spacing.lg)
-                            
-                            Spacer()
-                        }
+                        EmptyStateView(
+                            icon: "calendar.badge.plus",
+                            title: "No events scheduled",
+                            subtitle: "Add an event to get started",
+                            buttonTitle: "Add Event",
+                            onAction: { showAddEventSheet = true }
+                        )
                     } else {
                         VStack(alignment: .leading, spacing: AppTheme.Spacing.xl) {
                             ForEach(tasks, id: \.id) { task in

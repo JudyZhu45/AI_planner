@@ -7,16 +7,33 @@
 
 import SwiftUI
 
-enum MessageSender {
+enum MessageSender: String, Codable {
     case user
     case ai
 }
 
-struct Message: Identifiable {
-    let id = UUID()
-    let content: String
+struct Message: Identifiable, Codable {
+    let id: UUID
+    var content: String
     let sender: MessageSender
     let timestamp: Date
+    var isStreaming: Bool
+    var isError: Bool
+    
+    init(
+        content: String,
+        sender: MessageSender,
+        timestamp: Date,
+        isStreaming: Bool = false,
+        isError: Bool = false
+    ) {
+        self.id = UUID()
+        self.content = content
+        self.sender = sender
+        self.timestamp = timestamp
+        self.isStreaming = isStreaming
+        self.isError = isError
+    }
 }
 
 struct MessageBubble: View {
@@ -39,22 +56,46 @@ struct MessageBubble: View {
             }
             
             VStack(alignment: isUserMessage ? .trailing : .leading, spacing: AppTheme.Spacing.xs) {
-                Text(message.content)
-                    .font(AppTheme.Typography.bodyMedium)
-                    .foregroundColor(isUserMessage ? .white : AppTheme.textPrimary)
+                if message.content.isEmpty && message.isStreaming {
+                    // Streaming placeholder — dots
+                    HStack(spacing: 4) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            Circle()
+                                .fill(AppTheme.textTertiary)
+                                .frame(width: 6, height: 6)
+                        }
+                    }
                     .padding(.horizontal, AppTheme.Spacing.lg)
                     .padding(.vertical, AppTheme.Spacing.md)
-                    .background(
-                        isUserMessage
-                            ? AppTheme.primaryDeepIndigo
-                            : AppTheme.bgTertiary
-                    )
+                    .background(AppTheme.bgTertiary)
                     .clipShape(
                         RoundedRectangle(
                             cornerRadius: AppTheme.Radius.xl,
                             style: .continuous
                         )
                     )
+                } else {
+                    Text(message.content)
+                        .font(AppTheme.Typography.bodyMedium)
+                        .foregroundColor(
+                            isUserMessage
+                                ? AppTheme.textInverse
+                                : message.isError ? AppTheme.accentCoral : AppTheme.textPrimary
+                        )
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+                        .padding(.vertical, AppTheme.Spacing.md)
+                        .background(
+                            isUserMessage
+                                ? AppTheme.primaryDeepIndigo
+                                : message.isError ? AppTheme.accentCoral.opacity(0.1) : AppTheme.bgTertiary
+                        )
+                        .clipShape(
+                            RoundedRectangle(
+                                cornerRadius: AppTheme.Radius.xl,
+                                style: .continuous
+                            )
+                        )
+                }
                 
                 Text(timeString)
                     .font(AppTheme.Typography.labelSmall)

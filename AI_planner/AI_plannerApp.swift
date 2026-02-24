@@ -19,26 +19,31 @@ struct AI_plannerApp: App {
     
     var body: some Scene {
         WindowGroup {
-            if authManager.isLoading {
-                // Splash / loading screen
-                ZStack {
-                    AppTheme.bgPrimary
-                        .ignoresSafeArea()
-                    
-                    VStack(spacing: AppTheme.Spacing.lg) {
-                        ProgressView()
-                            .scaleEffect(1.2)
-                            .tint(AppTheme.primaryDeepIndigo)
+            Group {
+                if authManager.isLoading {
+                    // Splash / loading screen
+                    ZStack {
+                        AppTheme.bgPrimary
+                            .ignoresSafeArea()
                         
-                        Text("AI Planner")
-                            .font(AppTheme.Typography.headlineLarge)
-                            .foregroundColor(AppTheme.primaryDeepIndigo)
+                        VStack(spacing: AppTheme.Spacing.lg) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+                                .tint(AppTheme.primaryDeepIndigo)
+                            
+                            Text("AI Planner")
+                                .font(AppTheme.Typography.headlineLarge)
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
+                        }
                     }
+                } else if authManager.isSignedIn {
+                    ContentView(authManager: authManager)
+                } else {
+                    LoginView(authManager: authManager)
                 }
-            } else if authManager.isSignedIn {
-                ContentView(authManager: authManager)
-            } else {
-                LoginView(authManager: authManager)
+            }
+            .task {
+                _ = await NotificationManager.shared.requestAuthorization()
             }
         }
     }
