@@ -17,9 +17,6 @@ class TodoViewModel: ObservableObject {
     
     init() {
         loadTodos()
-        if todos.isEmpty {
-            addSampleTodos()
-        }
     }
     
     // MARK: - CRUD Operations
@@ -71,12 +68,14 @@ class TodoViewModel: ObservableObject {
         }
     }
     
-    private func addSampleTodos() {
+    // MARK: - Preview Support
+    
+    static var preview: TodoViewModel {
+        let vm = TodoViewModel()
         let today = Date()
         let calendar = Calendar.current
         
-        todos = [
-            // Today's events
+        vm.todos = [
             TodoTask(
                 title: "Gym",
                 description: "Morning workout session",
@@ -121,8 +120,6 @@ class TodoViewModel: ObservableObject {
                 createdAt: today,
                 eventType: .meeting
             ),
-            
-            // Tomorrow's events
             TodoTask(
                 title: "Gym",
                 description: "Evening cardio workout",
@@ -145,8 +142,6 @@ class TodoViewModel: ObservableObject {
                 createdAt: today,
                 eventType: .dinner
             ),
-            
-            // Day 3
             TodoTask(
                 title: "Class",
                 description: "Data Structures and Algorithms",
@@ -169,8 +164,6 @@ class TodoViewModel: ObservableObject {
                 createdAt: today,
                 eventType: .study
             ),
-            
-            // Day 4
             TodoTask(
                 title: "Meeting",
                 description: "Project planning session",
@@ -183,7 +176,7 @@ class TodoViewModel: ObservableObject {
                 eventType: .meeting
             ),
         ]
-        saveTodos()
+        return vm
     }
     
     // MARK: - Helper Methods

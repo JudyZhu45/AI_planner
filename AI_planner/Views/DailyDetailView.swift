@@ -84,11 +84,11 @@ struct DailyDetailView: View {
                             Button(action: { showAddEventSheet = true }) {
                                 Text("Add Event")
                                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.textInverse)
                                     .frame(maxWidth: .infinity)
                                     .frame(height: 44)
                                     .background(AppTheme.secondaryTeal)
-                                    .cornerRadius(12)
+                                    .cornerRadius(AppTheme.Radius.md)
                             }
                             .padding(.horizontal, AppTheme.Spacing.lg)
                             .padding(.top, AppTheme.Spacing.lg)
@@ -99,6 +99,10 @@ struct DailyDetailView: View {
                         VStack(alignment: .leading, spacing: AppTheme.Spacing.xl) {
                             ForEach(tasks, id: \.id) { task in
                                 TimeBlockCard(task: task, viewModel: viewModel)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        editingTask = task
+                                    }
                             }
                         }
                         .padding(.horizontal, AppTheme.Spacing.lg)
@@ -112,6 +116,17 @@ struct DailyDetailView: View {
                 viewModel: viewModel,
                 isPresented: $showAddEventSheet,
                 selectedDate: date
+            )
+        }
+        .sheet(item: $editingTask) { task in
+            AddEventSheet(
+                viewModel: viewModel,
+                isPresented: Binding(
+                    get: { editingTask != nil },
+                    set: { if !$0 { editingTask = nil } }
+                ),
+                selectedDate: date,
+                editingTask: task
             )
         }
     }
@@ -180,15 +195,15 @@ struct TimeBlockCard: View {
                 }) {
                     Image(systemName: "trash")
                         .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.red)
+                        .foregroundColor(AppTheme.accentCoral)
                 }
             }
         }
         .padding(AppTheme.Spacing.lg)
         .background(eventColor.light)
-        .cornerRadius(16)
+        .cornerRadius(AppTheme.Radius.lg)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
                 .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
         )
     }
@@ -202,7 +217,7 @@ struct TimeBlockCard: View {
     DailyDetailView(
         date: Date(),
         tasks: [],
-        viewModel: TodoViewModel(),
+        viewModel: .preview,
         isPresented: .constant(true),
         namespace: Namespace().wrappedValue
     )

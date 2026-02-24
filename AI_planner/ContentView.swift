@@ -28,7 +28,7 @@ struct ContentView: View {
                 } else if selectedTab == 2 {
                     AIChatView()
                 } else {
-                    ProfileView(authManager: authManager)
+                    ProfileView(authManager: authManager, viewModel: todoViewModel)
                 }
                 
                 // Custom Tab Bar
@@ -44,7 +44,7 @@ struct ContentView: View {
                     }) {
                         Image(systemName: "plus")
                             .font(.system(size: 20, weight: .semibold))
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.textInverse)
                             .frame(width: 56, height: 56)
                             .background(
                                 LinearGradient(

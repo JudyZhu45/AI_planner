@@ -52,7 +52,7 @@ struct LoginView: View {
                                 
                                 Image(systemName: "brain.head.profile.fill")
                                     .font(.system(size: 36, weight: .semibold))
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.textInverse)
                             }
                             
                             VStack(spacing: AppTheme.Spacing.sm) {
@@ -68,55 +68,23 @@ struct LoginView: View {
                         
                         // Form
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            // Email field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Email")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "envelope.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    TextField("your@email.com", text: $email)
-                                        .textContentType(.emailAddress)
-                                        .autocapitalization(.none)
-                                        .keyboardType(.emailAddress)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Email",
+                                icon: "envelope.fill",
+                                placeholder: "your@email.com",
+                                text: $email,
+                                textContentType: .emailAddress,
+                                keyboardType: .emailAddress
+                            )
                             
-                            // Password field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Password")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    SecureField("Enter your password", text: $password)
-                                        .textContentType(.password)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Password",
+                                icon: "lock.fill",
+                                placeholder: "Enter your password",
+                                text: $password,
+                                isSecure: true,
+                                textContentType: .password
+                            )
                             
                             // Forgot password
                             HStack {
@@ -130,20 +98,15 @@ struct LoginView: View {
                                 }
                             }
                             
-                            // Error message
                             if let error = authManager.errorMessage {
-                                Text(error)
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.accentCoral)
-                                    .multilineTextAlignment(.center)
-                                    .padding(AppTheme.Spacing.md)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppTheme.accentCoral.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                AuthErrorMessage(message: error)
                             }
                             
-                            // Sign In button
-                            Button {
+                            AuthPrimaryButton(
+                                title: "Sign In",
+                                isLoading: authManager.isLoading,
+                                isDisabled: email.isEmpty || password.isEmpty
+                            ) {
                                 Task {
                                     await authManager.signIn(email: email, password: password)
                                     if authManager.needsConfirmation {
@@ -153,33 +116,7 @@ struct LoginView: View {
                                         }
                                     }
                                 }
-                            } label: {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    if authManager.isLoading {
-                                        ProgressView()
-                                            .tint(.white)
-                                    }
-                                    Text("Sign In")
-                                        .font(AppTheme.Typography.titleLarge)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(AppTheme.Spacing.lg)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            AppTheme.primaryDeepIndigo,
-                                            AppTheme.primaryDeepIndigo.opacity(0.85)
-                                        ]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                            .disabled(email.isEmpty || password.isEmpty || authManager.isLoading)
-                            .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1)
                         }
                         .padding(AppTheme.Spacing.xxl)
                         .background(AppTheme.bgSecondary)

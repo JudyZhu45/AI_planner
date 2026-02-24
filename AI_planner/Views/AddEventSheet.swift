@@ -11,6 +11,7 @@ struct AddEventSheet: View {
     @Binding var isPresented: Bool
     @ObservedObject var viewModel: TodoViewModel
     var selectedDate: Date = Date()
+    var editingTask: TodoTask? = nil
     
     @State private var title = ""
     @State private var description = ""
@@ -20,15 +21,29 @@ struct AddEventSheet: View {
     @State private var selectedEventType: TodoTask.EventType = .other
     @State private var selectedPriority: TodoTask.TaskPriority = .medium
     
-    init(viewModel: TodoViewModel, isPresented: Binding<Bool>, selectedDate: Date = Date()) {
+    private var isEditing: Bool { editingTask != nil }
+    
+    init(viewModel: TodoViewModel, isPresented: Binding<Bool>, selectedDate: Date = Date(), editingTask: TodoTask? = nil) {
         self.viewModel = viewModel
         self._isPresented = isPresented
         self.selectedDate = selectedDate
-        _eventDate = State(initialValue: selectedDate)
-        let defaultStart = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
-        let defaultEnd = Calendar.current.date(byAdding: .hour, value: 2, to: Date()) ?? Date()
-        _startTime = State(initialValue: defaultStart)
-        _endTime = State(initialValue: defaultEnd)
+        self.editingTask = editingTask
+        
+        if let task = editingTask {
+            _title = State(initialValue: task.title)
+            _description = State(initialValue: task.description)
+            _eventDate = State(initialValue: task.dueDate)
+            _startTime = State(initialValue: task.startTime ?? Date())
+            _endTime = State(initialValue: task.endTime ?? Date())
+            _selectedEventType = State(initialValue: task.eventType)
+            _selectedPriority = State(initialValue: task.priority)
+        } else {
+            _eventDate = State(initialValue: selectedDate)
+            let defaultStart = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
+            let defaultEnd = Calendar.current.date(byAdding: .hour, value: 2, to: Date()) ?? Date()
+            _startTime = State(initialValue: defaultStart)
+            _endTime = State(initialValue: defaultEnd)
+        }
     }
     
     var body: some View {
@@ -47,7 +62,7 @@ struct AddEventSheet: View {
                     
                     Spacer()
                     
-                    Text("New Event")
+                    Text(isEditing ? "Edit Event" : "New Event")
                         .font(AppTheme.Typography.headlineSmall)
                         .foregroundColor(AppTheme.textPrimary)
                     
@@ -56,7 +71,7 @@ struct AddEventSheet: View {
                     Button(action: { saveEvent() }) {
                         Text("Save")
                             .font(AppTheme.Typography.titleSmall)
-                            .foregroundColor(.white)
+                            .foregroundColor(AppTheme.textInverse)
                             .padding(.horizontal, AppTheme.Spacing.lg)
                             .padding(.vertical, AppTheme.Spacing.sm)
                             .background(AppTheme.primaryDeepIndigo)
@@ -107,7 +122,7 @@ struct AddEventSheet: View {
                                                 Text(type.rawValue)
                                                     .font(AppTheme.Typography.labelSmall)
                                             }
-                                            .foregroundColor(selectedEventType == type ? .white : AppTheme.textSecondary)
+                                            .foregroundColor(selectedEventType == type ? AppTheme.textInverse : AppTheme.textSecondary)
                                             .padding(.vertical, AppTheme.Spacing.md)
                                             .padding(.horizontal, AppTheme.Spacing.lg)
                                             .background(selectedEventType == type ? eventColor.primary : AppTheme.bgSecondary)
@@ -238,20 +253,31 @@ struct AddEventSheet: View {
         let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
         guard !trimmedTitle.isEmpty else { return }
         
-        viewModel.addTodo(
-            title: trimmedTitle,
-            description: description,
-            dueDate: eventDate,
-            priority: selectedPriority
-        )
-        
-        // Update the last added task with event details
-        if let lastIndex = viewModel.todos.indices.last {
-            var updatedTask = viewModel.todos[lastIndex]
-            updatedTask.eventType = selectedEventType
-            updatedTask.startTime = startTime
-            updatedTask.endTime = endTime
-            viewModel.updateTodo(updatedTask)
+        if var existing = editingTask {
+            existing.title = trimmedTitle
+            existing.description = description
+            existing.dueDate = eventDate
+            existing.startTime = startTime
+            existing.endTime = endTime
+            existing.eventType = selectedEventType
+            existing.priority = selectedPriority
+            viewModel.updateTodo(existing)
+        } else {
+            viewModel.addTodo(
+                title: trimmedTitle,
+                description: description,
+                dueDate: eventDate,
+                priority: selectedPriority
+            )
+            
+            // Update the last added task with event details
+            if let lastIndex = viewModel.todos.indices.last {
+                var updatedTask = viewModel.todos[lastIndex]
+                updatedTask.eventType = selectedEventType
+                updatedTask.startTime = startTime
+                updatedTask.endTime = endTime
+                viewModel.updateTodo(updatedTask)
+            }
         }
         
         isPresented = false
@@ -260,7 +286,7 @@ struct AddEventSheet: View {
 
 #Preview {
     AddEventSheet(
-        viewModel: TodoViewModel(),
+        viewModel: .preview,
         isPresented: .constant(true),
         selectedDate: Date()
     )

@@ -9,6 +9,59 @@ import SwiftUI
 
 struct ProfileView: View {
     var authManager: AuthManager
+    @ObservedObject var viewModel: TodoViewModel
+    
+    /// Total hours planned across all events that have start/end times
+    private var totalHoursPlanned: Double {
+        viewModel.todos.reduce(0.0) { total, task in
+            guard let start = task.startTime, let end = task.endTime else { return total }
+            return total + end.timeIntervalSince(start) / 3600.0
+        }
+    }
+    
+    /// Number of completed tasks
+    private var completedTasksCount: Int {
+        viewModel.todos.filter { $0.isCompleted }.count
+    }
+    
+    /// Current streak: consecutive days (ending today or yesterday) that have at least one completed task
+    private var currentStreak: Int {
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        // Group completed tasks by day
+        var daysWithCompletions = Set<Date>()
+        for task in viewModel.todos where task.isCompleted {
+            daysWithCompletions.insert(calendar.startOfDay(for: task.dueDate))
+        }
+        
+        guard !daysWithCompletions.isEmpty else { return 0 }
+        
+        // Start counting from today, fall back to yesterday
+        var checkDate = today
+        if !daysWithCompletions.contains(checkDate) {
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+            if !daysWithCompletions.contains(checkDate) {
+                return 0
+            }
+        }
+        
+        var streak = 0
+        while daysWithCompletions.contains(checkDate) {
+            streak += 1
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate)!
+        }
+        return streak
+    }
+    
+    private var formattedHours: String {
+        if totalHoursPlanned == 0 { return "0 hrs" }
+        let rounded = (totalHoursPlanned * 10).rounded() / 10
+        if rounded == rounded.rounded() {
+            return "\(Int(rounded)) hrs"
+        }
+        return String(format: "%.1f hrs", rounded)
+    }
     
     var body: some View {
         ZStack {
@@ -81,21 +134,21 @@ struct ProfileView: View {
                                     icon: "clock.fill",
                                     iconColor: AppTheme.secondaryTeal,
                                     label: "Total Hours Planned",
-                                    value: "24.5 hrs"
+                                    value: formattedHours
                                 )
                                 
                                 ProfileStatRow(
                                     icon: "checkmark.circle.fill",
                                     iconColor: Color.green.opacity(0.7),
                                     label: "Tasks Completed",
-                                    value: "18 tasks"
+                                    value: "\(completedTasksCount) tasks"
                                 )
                                 
                                 ProfileStatRow(
                                     icon: "flame.fill",
                                     iconColor: AppTheme.accentCoral,
                                     label: "Current Streak",
-                                    value: "7 days"
+                                    value: "\(currentStreak) days"
                                 )
                             }
                             .padding(AppTheme.Spacing.lg)
@@ -231,5 +284,5 @@ struct SettingsRow: View {
 }
 
 #Preview {
-    ProfileView(authManager: AuthManager())
+    ProfileView(authManager: AuthManager(), viewModel: .preview)
 }

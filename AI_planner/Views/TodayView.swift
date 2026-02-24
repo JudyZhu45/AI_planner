@@ -10,6 +10,8 @@ import SwiftUI
 struct TodayView: View {
     @ObservedObject var viewModel: TodoViewModel
     @State private var showAddEventSheet = false
+    @State private var editingEvent: TodoTask?
+    @State private var editingTodo: TodoTask?
     
     // Get today's scheduled events (with time)
     var todayScheduledEvents: [TodoTask] {
@@ -115,6 +117,10 @@ struct TodayView: View {
                                         }
                                     }
                                 )
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    editingEvent = task
+                                }
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -145,6 +151,10 @@ struct TodayView: View {
                                         }
                                     }
                                 )
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    editingTodo = task
+                                }
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
@@ -190,76 +200,22 @@ struct TodayView: View {
         .sheet(isPresented: $showAddEventSheet) {
             AddEventSheet(viewModel: viewModel, isPresented: $showAddEventSheet)
         }
-    }
-}
-
-// MARK: - Todo Checklist Item
-struct TodoChecklistItem: View {
-    let task: TodoTask
-    let onToggle: () -> Void
-    let onDelete: () -> Void
-    
-    var body: some View {
-        HStack(spacing: AppTheme.Spacing.md) {
-            CheckboxButton(
-                isChecked: task.isCompleted,
-                action: onToggle
+        .sheet(item: $editingEvent) { task in
+            AddEventSheet(
+                viewModel: viewModel,
+                isPresented: Binding(
+                    get: { editingEvent != nil },
+                    set: { if !$0 { editingEvent = nil } }
+                ),
+                editingTask: task
             )
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(task.title)
-                    .font(AppTheme.Typography.bodyMedium)
-                    .foregroundColor(task.isCompleted ? AppTheme.textTertiary : AppTheme.textPrimary)
-                    .strikethrough(task.isCompleted)
-                
-                if !task.description.isEmpty {
-                    Text(task.description)
-                        .font(AppTheme.Typography.bodySmall)
-                        .foregroundColor(AppTheme.textSecondary)
-                        .lineLimit(2)
-                }
-            }
-            
-            Spacer()
-            
-            Button(action: onDelete) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 16))
-                    .foregroundColor(AppTheme.textTertiary)
-            }
         }
-        .padding(AppTheme.Spacing.lg)
-        .background(AppTheme.bgSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
-        .overlay(
-            RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(AppTheme.borderColor, lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Filter Button Component
-struct FilterButton: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isSelected ? .white : .gray)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(
-                    isSelected ?
-                    RoundedRectangle(cornerRadius: 8).fill(Color(red: 0.2, green: 0.5, blue: 1.0))
-                    : RoundedRectangle(cornerRadius: 8).fill(Color(.systemGray6))
-                )
+        .sheet(item: $editingTodo) { task in
+            AddTodoSheet(viewModel: viewModel, editingTask: task)
         }
     }
 }
 
 #Preview {
-    TodayView(viewModel: TodoViewModel())
+    TodayView(viewModel: .preview)
 }

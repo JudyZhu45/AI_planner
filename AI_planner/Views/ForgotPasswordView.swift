@@ -61,7 +61,7 @@ struct ForgotPasswordView: View {
                         } label: {
                             Text("Back to Sign In")
                                 .font(AppTheme.Typography.titleLarge)
-                                .foregroundColor(.white)
+                                .foregroundColor(AppTheme.textInverse)
                                 .frame(maxWidth: .infinity)
                                 .padding(AppTheme.Spacing.lg)
                                 .background(
@@ -80,68 +80,32 @@ struct ForgotPasswordView: View {
                     } else if showResetForm {
                         // Code + New Password form
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            // Code field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Verification Code")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "number")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    TextField("Enter 6-digit code", text: $confirmationCode)
-                                        .keyboardType(.numberPad)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Verification Code",
+                                icon: "number",
+                                placeholder: "Enter 6-digit code",
+                                text: $confirmationCode,
+                                keyboardType: .numberPad
+                            )
                             
-                            // New password field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("New Password")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    SecureField("Min. 8 characters", text: $newPassword)
-                                        .textContentType(.newPassword)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "New Password",
+                                icon: "lock.fill",
+                                placeholder: "Min. 8 characters",
+                                text: $newPassword,
+                                isSecure: true,
+                                textContentType: .newPassword
+                            )
                             
-                            // Error message
                             if let error = authManager.errorMessage {
-                                Text(error)
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.accentCoral)
-                                    .multilineTextAlignment(.center)
-                                    .padding(AppTheme.Spacing.md)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppTheme.accentCoral.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                AuthErrorMessage(message: error)
                             }
                             
-                            // Reset button
-                            Button {
+                            AuthPrimaryButton(
+                                title: "Reset Password",
+                                isLoading: authManager.isLoading,
+                                isDisabled: confirmationCode.count < 6 || newPassword.isEmpty
+                            ) {
                                 Task {
                                     let success = await authManager.confirmResetPassword(
                                         for: email,
@@ -152,33 +116,7 @@ struct ForgotPasswordView: View {
                                         isResetComplete = true
                                     }
                                 }
-                            } label: {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    if authManager.isLoading {
-                                        ProgressView()
-                                            .tint(.white)
-                                    }
-                                    Text("Reset Password")
-                                        .font(AppTheme.Typography.titleLarge)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(AppTheme.Spacing.lg)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            AppTheme.primaryDeepIndigo,
-                                            AppTheme.primaryDeepIndigo.opacity(0.85)
-                                        ]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                            .disabled(confirmationCode.count < 6 || newPassword.isEmpty || authManager.isLoading)
-                            .opacity(confirmationCode.count < 6 || newPassword.isEmpty ? 0.6 : 1)
                         }
                         .padding(AppTheme.Spacing.xxl)
                         .background(AppTheme.bgSecondary)
@@ -188,78 +126,31 @@ struct ForgotPasswordView: View {
                     } else {
                         // Email form
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Email")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "envelope.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    TextField("your@email.com", text: $email)
-                                        .textContentType(.emailAddress)
-                                        .autocapitalization(.none)
-                                        .keyboardType(.emailAddress)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Email",
+                                icon: "envelope.fill",
+                                placeholder: "your@email.com",
+                                text: $email,
+                                textContentType: .emailAddress,
+                                keyboardType: .emailAddress
+                            )
                             
-                            // Error message
                             if let error = authManager.errorMessage {
-                                Text(error)
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.accentCoral)
-                                    .multilineTextAlignment(.center)
-                                    .padding(AppTheme.Spacing.md)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppTheme.accentCoral.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                AuthErrorMessage(message: error)
                             }
                             
-                            // Send Code button
-                            Button {
+                            AuthPrimaryButton(
+                                title: "Send Reset Code",
+                                isLoading: authManager.isLoading,
+                                isDisabled: email.isEmpty
+                            ) {
                                 Task {
                                     let needsCode = await authManager.resetPassword(for: email)
                                     if needsCode {
                                         showResetForm = true
                                     }
                                 }
-                            } label: {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    if authManager.isLoading {
-                                        ProgressView()
-                                            .tint(.white)
-                                    }
-                                    Text("Send Reset Code")
-                                        .font(AppTheme.Typography.titleLarge)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(AppTheme.Spacing.lg)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            AppTheme.primaryDeepIndigo,
-                                            AppTheme.primaryDeepIndigo.opacity(0.85)
-                                        ]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                            .disabled(email.isEmpty || authManager.isLoading)
-                            .opacity(email.isEmpty ? 0.6 : 1)
                         }
                         .padding(AppTheme.Spacing.xxl)
                         .background(AppTheme.bgSecondary)

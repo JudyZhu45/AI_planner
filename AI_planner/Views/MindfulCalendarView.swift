@@ -312,5 +312,5 @@ struct SelectedDayPreviewView: View {
 }
 
 #Preview {
-    MindfulCalendarView(viewModel: TodoViewModel())
+    MindfulCalendarView(viewModel: .preview)
 }

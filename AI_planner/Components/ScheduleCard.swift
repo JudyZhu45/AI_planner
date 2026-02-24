@@ -36,7 +36,7 @@ struct ScheduleCard: View {
                 // Icon Badge
                 Image(systemName: eventColor.icon)
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white)
+                    .foregroundColor(AppTheme.textInverse)
                     .frame(width: 36, height: 36)
                     .background(eventColor.primary)
                     .clipShape(Circle())

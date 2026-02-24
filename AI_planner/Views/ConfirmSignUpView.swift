@@ -79,7 +79,7 @@ struct ConfirmSignUpView: View {
                             } label: {
                                 Text("Go to Sign In")
                                     .font(AppTheme.Typography.titleLarge)
-                                    .foregroundColor(.white)
+                                    .foregroundColor(AppTheme.textInverse)
                                     .frame(maxWidth: .infinity)
                                     .padding(AppTheme.Spacing.lg)
                                     .background(
@@ -103,43 +103,23 @@ struct ConfirmSignUpView: View {
                     } else {
                         // Code input
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Verification Code")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "number")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    TextField("Enter 6-digit code", text: $confirmationCode)
-                                        .keyboardType(.numberPad)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Verification Code",
+                                icon: "number",
+                                placeholder: "Enter 6-digit code",
+                                text: $confirmationCode,
+                                keyboardType: .numberPad
+                            )
                             
-                            // Error message
                             if let error = authManager.errorMessage {
-                                Text(error)
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.accentCoral)
-                                    .multilineTextAlignment(.center)
-                                    .padding(AppTheme.Spacing.md)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppTheme.accentCoral.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                AuthErrorMessage(message: error)
                             }
                             
-                            // Verify button
-                            Button {
+                            AuthPrimaryButton(
+                                title: "Verify",
+                                isLoading: authManager.isLoading,
+                                isDisabled: confirmationCode.count < 6
+                            ) {
                                 Task {
                                     let success = await authManager.confirmSignUp(
                                         email: email,
@@ -149,33 +129,7 @@ struct ConfirmSignUpView: View {
                                         isConfirmed = true
                                     }
                                 }
-                            } label: {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    if authManager.isLoading {
-                                        ProgressView()
-                                            .tint(.white)
-                                    }
-                                    Text("Verify")
-                                        .font(AppTheme.Typography.titleLarge)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(AppTheme.Spacing.lg)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            AppTheme.primaryDeepIndigo,
-                                            AppTheme.primaryDeepIndigo.opacity(0.85)
-                                        ]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                            .disabled(confirmationCode.count < 6 || authManager.isLoading)
-                            .opacity(confirmationCode.count < 6 ? 0.6 : 1)
                             
                             // Resend code
                             Button {

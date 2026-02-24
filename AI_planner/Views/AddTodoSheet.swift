@@ -10,11 +10,26 @@ import SwiftUI
 struct AddTodoSheet: View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: TodoViewModel
+    var editingTask: TodoTask? = nil
     
     @State private var title = ""
     @State private var description = ""
     @State private var dueDate = Date(timeIntervalSinceNow: 86400) // Tomorrow
     @State private var priority: TodoTask.TaskPriority = .medium
+    
+    private var isEditing: Bool { editingTask != nil }
+    
+    init(viewModel: TodoViewModel, editingTask: TodoTask? = nil) {
+        self.viewModel = viewModel
+        self.editingTask = editingTask
+        
+        if let task = editingTask {
+            _title = State(initialValue: task.title)
+            _description = State(initialValue: task.description)
+            _dueDate = State(initialValue: task.dueDate)
+            _priority = State(initialValue: task.priority)
+        }
+    }
     
     var body: some View {
         NavigationStack {
@@ -43,7 +58,7 @@ struct AddTodoSheet: View {
                     )
                 }
             }
-            .navigationTitle("Add New Task")
+            .navigationTitle(isEditing ? "Edit Task" : "Add New Task")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -53,14 +68,23 @@ struct AddTodoSheet: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Add") {
-                        if !title.trimmingCharacters(in: .whitespaces).isEmpty {
-                            viewModel.addTodo(
-                                title: title,
-                                description: description,
-                                dueDate: dueDate,
-                                priority: priority
-                            )
+                    Button(isEditing ? "Save" : "Add") {
+                        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+                        if !trimmedTitle.isEmpty {
+                            if var existing = editingTask {
+                                existing.title = trimmedTitle
+                                existing.description = description
+                                existing.dueDate = dueDate
+                                existing.priority = priority
+                                viewModel.updateTodo(existing)
+                            } else {
+                                viewModel.addTodo(
+                                    title: trimmedTitle,
+                                    description: description,
+                                    dueDate: dueDate,
+                                    priority: priority
+                                )
+                            }
                             dismiss()
                         }
                     }
@@ -72,5 +96,5 @@ struct AddTodoSheet: View {
 }
 
 #Preview {
-    AddTodoSheet(viewModel: TodoViewModel())
+    AddTodoSheet(viewModel: .preview)
 }

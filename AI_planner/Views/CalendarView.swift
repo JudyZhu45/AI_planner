@@ -16,5 +16,5 @@ struct CalendarView: View {
 }
 
 #Preview {
-    CalendarView(viewModel: TodoViewModel())
+    CalendarView(viewModel: .preview)
 }

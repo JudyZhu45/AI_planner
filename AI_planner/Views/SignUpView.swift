@@ -67,7 +67,7 @@ struct SignUpView: View {
                                 } label: {
                                     Text("Go to Sign In")
                                         .font(AppTheme.Typography.titleLarge)
-                                        .foregroundColor(.white)
+                                        .foregroundColor(AppTheme.textInverse)
                                         .frame(maxWidth: .infinity)
                                         .padding(AppTheme.Spacing.lg)
                                         .background(
@@ -85,137 +85,47 @@ struct SignUpView: View {
                             }
                         } else {
                             // Registration form
-                            // Email field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Email")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "envelope.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    TextField("your@email.com", text: $email)
-                                        .textContentType(.emailAddress)
-                                        .autocapitalization(.none)
-                                        .keyboardType(.emailAddress)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                            }
+                            AuthFormField(
+                                label: "Email",
+                                icon: "envelope.fill",
+                                placeholder: "your@email.com",
+                                text: $email,
+                                textContentType: .emailAddress,
+                                keyboardType: .emailAddress
+                            )
                             
-                            // Password field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Password")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    SecureField("Min. 8 characters", text: $password)
-                                        .textContentType(.newPassword)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
-                                )
-                                
-                                Text("Must include uppercase, lowercase, number & symbol")
-                                    .font(AppTheme.Typography.labelSmall)
-                                    .foregroundColor(AppTheme.textTertiary)
-                            }
+                            AuthFormField(
+                                label: "Password",
+                                icon: "lock.fill",
+                                placeholder: "Min. 8 characters",
+                                text: $password,
+                                isSecure: true,
+                                textContentType: .newPassword,
+                                hint: "Must include uppercase, lowercase, number & symbol"
+                            )
                             
-                            // Confirm Password field
-                            VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-                                Text("Confirm Password")
-                                    .font(AppTheme.Typography.labelLarge)
-                                    .foregroundColor(AppTheme.textSecondary)
-                                
-                                HStack(spacing: AppTheme.Spacing.md) {
-                                    Image(systemName: "lock.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(AppTheme.textTertiary)
-                                    
-                                    SecureField("Re-enter your password", text: $confirmPassword)
-                                        .textContentType(.newPassword)
-                                        .font(AppTheme.Typography.bodyLarge)
-                                }
-                                .padding(AppTheme.Spacing.lg)
-                                .background(AppTheme.bgSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(
-                                            !confirmPassword.isEmpty && !passwordsMatch
-                                                ? AppTheme.accentCoral
-                                                : AppTheme.borderColor,
-                                            lineWidth: 1
-                                        )
-                                )
-                                
-                                if !confirmPassword.isEmpty && !passwordsMatch {
-                                    Text("Passwords do not match")
-                                        .font(AppTheme.Typography.labelSmall)
-                                        .foregroundColor(AppTheme.accentCoral)
-                                }
-                            }
+                            AuthFormField(
+                                label: "Confirm Password",
+                                icon: "lock.fill",
+                                placeholder: "Re-enter your password",
+                                text: $confirmPassword,
+                                isSecure: true,
+                                textContentType: .newPassword,
+                                showError: !confirmPassword.isEmpty && !passwordsMatch,
+                                errorMessage: "Passwords do not match"
+                            )
                             
-                            // Error message
                             if let error = authManager.errorMessage {
-                                Text(error)
-                                    .font(AppTheme.Typography.bodySmall)
-                                    .foregroundColor(AppTheme.accentCoral)
-                                    .multilineTextAlignment(.center)
-                                    .padding(AppTheme.Spacing.md)
-                                    .frame(maxWidth: .infinity)
-                                    .background(AppTheme.accentCoral.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                                AuthErrorMessage(message: error)
                             }
                             
-                            // Sign Up button
-                            Button {
+                            AuthPrimaryButton(
+                                title: "Create Account",
+                                isLoading: authManager.isLoading,
+                                isDisabled: !isFormValid
+                            ) {
                                 handleSignUp()
-                            } label: {
-                                HStack(spacing: AppTheme.Spacing.sm) {
-                                    if authManager.isLoading {
-                                        ProgressView()
-                                            .tint(.white)
-                                    }
-                                    Text("Create Account")
-                                        .font(AppTheme.Typography.titleLarge)
-                                }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(AppTheme.Spacing.lg)
-                                .background(
-                                    LinearGradient(
-                                        gradient: Gradient(colors: [
-                                            AppTheme.primaryDeepIndigo,
-                                            AppTheme.primaryDeepIndigo.opacity(0.85)
-                                        ]),
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-                                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
                             }
-                            .disabled(!isFormValid || authManager.isLoading)
-                            .opacity(!isFormValid ? 0.6 : 1)
                         }
                     }
                     .padding(AppTheme.Spacing.xxl)
