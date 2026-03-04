@@ -81,6 +81,9 @@ struct ContentView: View {
                 .onTapGesture {
                     showAddEventSheet = true
                 }
+            
+            // Toast overlay (topmost layer)
+            ToastOverlay()
         }
         .sheet(isPresented: $showAddEventSheet) {
             AddEventSheet(viewModel: todoViewModel, isPresented: $showAddEventSheet)

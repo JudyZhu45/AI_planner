@@ -16,8 +16,13 @@ struct AddTodoSheet: View {
     @State private var description = ""
     @State private var dueDate = Date(timeIntervalSinceNow: 86400) // Tomorrow
     @State private var priority: TodoTask.TaskPriority = .medium
+    @State private var showTitleWarning = false
     
     private var isEditing: Bool { editingTask != nil }
+    
+    private var isTitleEmpty: Bool {
+        title.trimmingCharacters(in: .whitespaces).isEmpty
+    }
     
     init(viewModel: TodoViewModel, editingTask: TodoTask? = nil) {
         self.viewModel = viewModel
@@ -35,7 +40,23 @@ struct AddTodoSheet: View {
         NavigationStack {
             Form {
                 Section(header: Text("Task Details")) {
-                    TextField("Task Title", text: $title)
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("Task Title", text: $title)
+                            .onChange(of: title) {
+                                if !isTitleEmpty { showTitleWarning = false }
+                            }
+                        
+                        if showTitleWarning && isTitleEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .font(.system(size: 12))
+                                Text("Please enter a title")
+                                    .font(.caption)
+                            }
+                            .foregroundColor(AppTheme.accentCoral)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
                     
                     TextField("Description", text: $description, axis: .vertical)
                         .lineLimit(3...5)
@@ -69,26 +90,31 @@ struct AddTodoSheet: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(isEditing ? "Save" : "Add") {
-                        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
-                        if !trimmedTitle.isEmpty {
-                            if var existing = editingTask {
-                                existing.title = trimmedTitle
-                                existing.description = description
-                                existing.dueDate = dueDate
-                                existing.priority = priority
-                                viewModel.updateTodo(existing)
-                            } else {
-                                viewModel.addTodo(
-                                    title: trimmedTitle,
-                                    description: description,
-                                    dueDate: dueDate,
-                                    priority: priority
-                                )
-                            }
-                            dismiss()
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showTitleWarning = isTitleEmpty
                         }
+                        
+                        let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
+                        guard !trimmedTitle.isEmpty else { return }
+                        
+                        if var existing = editingTask {
+                            existing.title = trimmedTitle
+                            existing.description = description
+                            existing.dueDate = dueDate
+                            existing.priority = priority
+                            viewModel.updateTodo(existing)
+                            ToastManager.shared.show("Task updated", type: .success)
+                        } else {
+                            viewModel.addTodo(
+                                title: trimmedTitle,
+                                description: description,
+                                dueDate: dueDate,
+                                priority: priority
+                            )
+                            ToastManager.shared.show("Task added", type: .success)
+                        }
+                        dismiss()
                     }
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
         }

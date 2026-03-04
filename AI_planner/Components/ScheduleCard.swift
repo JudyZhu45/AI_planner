@@ -11,6 +11,7 @@ struct ScheduleCard: View {
     let task: TodoTask
     let onDelete: (() -> Void)?
     @State private var isHovered = false
+    @State private var completionProgress: CGFloat = 0
     
     var eventColor: EventColor {
         let eventType = task.eventType
@@ -78,7 +79,28 @@ struct ScheduleCard: View {
                 }
             }
             .padding(AppTheme.Spacing.lg)
-            .background(task.isCompleted ? eventColor.light.opacity(0.5) : eventColor.light)
+            .background(
+                ZStack {
+                    (task.isCompleted ? eventColor.light.opacity(0.5) : eventColor.light)
+                    
+                    // Completion fill overlay
+                    GeometryReader { geo in
+                        RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        AppTheme.secondaryTeal.opacity(0.15),
+                                        AppTheme.secondaryTeal.opacity(0.05)
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: geo.size.width * completionProgress)
+                    }
+                    .clipped()
+                }
+            )
             .cornerRadius(AppTheme.Radius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
@@ -90,6 +112,14 @@ struct ScheduleCard: View {
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isHovered = hovering
+            }
+        }
+        .onAppear {
+            completionProgress = task.isCompleted ? 1.0 : 0.0
+        }
+        .onChange(of: task.isCompleted) { _, newValue in
+            withAnimation(.easeInOut(duration: 0.5)) {
+                completionProgress = newValue ? 1.0 : 0.0
             }
         }
     }

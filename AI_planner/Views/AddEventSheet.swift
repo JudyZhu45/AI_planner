@@ -20,8 +20,23 @@ struct AddEventSheet: View {
     @State private var endTime = Date()
     @State private var selectedEventType: TodoTask.EventType = .other
     @State private var selectedPriority: TodoTask.TaskPriority = .medium
+    @State private var showTitleWarning = false
+    @State private var showTimeWarning = false
     
     private var isEditing: Bool { editingTask != nil }
+    
+    private var isTitleEmpty: Bool {
+        title.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+    
+    private var isEndTimeBeforeStart: Bool {
+        let calendar = Calendar.current
+        let startComponents = calendar.dateComponents([.hour, .minute], from: startTime)
+        let endComponents = calendar.dateComponents([.hour, .minute], from: endTime)
+        let startMinutes = (startComponents.hour ?? 0) * 60 + (startComponents.minute ?? 0)
+        let endMinutes = (endComponents.hour ?? 0) * 60 + (endComponents.minute ?? 0)
+        return endMinutes <= startMinutes
+    }
     
     init(viewModel: TodoViewModel, isPresented: Binding<Bool>, selectedDate: Date = Date(), editingTask: TodoTask? = nil) {
         self.viewModel = viewModel
@@ -68,16 +83,22 @@ struct AddEventSheet: View {
                     
                     Spacer()
                     
-                    Button(action: { saveEvent() }) {
-                        Text("Save")
-                            .font(AppTheme.Typography.titleSmall)
-                            .foregroundColor(AppTheme.textInverse)
-                            .padding(.horizontal, AppTheme.Spacing.lg)
-                            .padding(.vertical, AppTheme.Spacing.sm)
-                            .background(AppTheme.primaryDeepIndigo)
-                            .clipShape(Capsule())
+                    Button(action: { validateAndSave() }) {
+                        HStack(spacing: 6) {
+                            Text("Save")
+                                .font(AppTheme.Typography.titleSmall)
+                            
+                            if !isTitleEmpty && !isEndTimeBeforeStart {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12))
+                            }
+                        }
+                        .foregroundColor(AppTheme.textInverse)
+                        .padding(.horizontal, AppTheme.Spacing.lg)
+                        .padding(.vertical, AppTheme.Spacing.sm)
+                        .background(isTitleEmpty ? AppTheme.primaryDeepIndigo.opacity(0.4) : AppTheme.primaryDeepIndigo)
+                        .clipShape(Capsule())
                     }
-                    .disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
                 .padding(.horizontal, AppTheme.Spacing.lg)
                 .padding(.vertical, AppTheme.Spacing.lg)
@@ -100,8 +121,22 @@ struct AddEventSheet: View {
                                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                        .stroke(AppTheme.borderColor, lineWidth: 1)
+                                        .stroke(showTitleWarning && isTitleEmpty ? AppTheme.accentCoral : AppTheme.borderColor, lineWidth: 1)
                                 )
+                                .onChange(of: title) {
+                                    if !isTitleEmpty { showTitleWarning = false }
+                                }
+                            
+                            if showTitleWarning && isTitleEmpty {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 12))
+                                    Text("Please enter a title")
+                                        .font(AppTheme.Typography.labelSmall)
+                                }
+                                .foregroundColor(AppTheme.accentCoral)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
                         }
                         
                         // Event Type Selector
@@ -217,8 +252,25 @@ struct AddEventSheet: View {
                             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                    .stroke(AppTheme.borderColor, lineWidth: 1)
+                                    .stroke(showTimeWarning && isEndTimeBeforeStart ? AppTheme.accentCoral : AppTheme.borderColor, lineWidth: 1)
                             )
+                            
+                            if showTimeWarning && isEndTimeBeforeStart {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.circle.fill")
+                                        .font(.system(size: 12))
+                                    Text("End time must be after start time")
+                                        .font(AppTheme.Typography.labelSmall)
+                                }
+                                .foregroundColor(AppTheme.accentCoral)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                            }
+                        }
+                        .onChange(of: endTime) {
+                            if !isEndTimeBeforeStart { showTimeWarning = false }
+                        }
+                        .onChange(of: startTime) {
+                            if !isEndTimeBeforeStart { showTimeWarning = false }
                         }
                         
                         // Notes Field
@@ -249,9 +301,24 @@ struct AddEventSheet: View {
         }
     }
     
-    func saveEvent() {
+    private func validateAndSave() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            showTitleWarning = isTitleEmpty
+            showTimeWarning = isEndTimeBeforeStart
+        }
+        
+        guard !isTitleEmpty else { return }
+        
+        // Allow save with time warning but show a toast warning
+        if isEndTimeBeforeStart {
+            return
+        }
+        
+        saveEvent()
+    }
+    
+    private func saveEvent() {
         let trimmedTitle = title.trimmingCharacters(in: .whitespaces)
-        guard !trimmedTitle.isEmpty else { return }
         
         if var existing = editingTask {
             existing.title = trimmedTitle
@@ -262,6 +329,7 @@ struct AddEventSheet: View {
             existing.eventType = selectedEventType
             existing.priority = selectedPriority
             viewModel.updateTodo(existing)
+            ToastManager.shared.show("Event updated", type: .success)
         } else {
             viewModel.addTodo(
                 title: trimmedTitle,
@@ -278,6 +346,7 @@ struct AddEventSheet: View {
                 updatedTask.endTime = endTime
                 viewModel.updateTodo(updatedTask)
             }
+            ToastManager.shared.show("Event added", type: .success)
         }
         
         isPresented = false

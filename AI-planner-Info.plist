@@ -4,6 +4,12 @@
 <dict>
 	<key>MOONSHOT_API_KEY</key>
 	<string>$(MOONSHOT_API_KEY)</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>AI Planner needs access to your calendar to sync your events with the iOS Calendar app.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>AI Planner 需要语音识别权限，将你的语音转换为文字输入到聊天助手中。</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>AI Planner 需要麦克风权限来录制你的语音并进行语音识别。</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>LaunchScreen</key>

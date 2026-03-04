@@ -84,7 +84,7 @@ class KimiAPIService {
     
     // MARK: - Streaming Request
     
-    func streamChat(messages: [KimiMessage], temperature: Double = 0.6) async throws -> AsyncThrowingStream<String, Error> {
+    func streamChat(messages: [KimiMessage], temperature: Double = 0.3) async throws -> AsyncThrowingStream<String, Error> {
         guard let key = apiKey, !key.isEmpty, !key.contains("your-api-key") else {
             throw KimiAPIError.missingAPIKey
         }
@@ -155,7 +155,7 @@ class KimiAPIService {
     
     // MARK: - Non-streaming Request (fallback)
     
-    func sendChat(messages: [KimiMessage], temperature: Double = 0.6) async throws -> String {
+    func sendChat(messages: [KimiMessage], temperature: Double = 0.3) async throws -> String {
         guard let key = apiKey, !key.isEmpty, !key.contains("your-api-key") else {
             throw KimiAPIError.missingAPIKey
         }

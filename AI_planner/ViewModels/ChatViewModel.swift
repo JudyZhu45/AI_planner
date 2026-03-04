@@ -14,6 +14,8 @@ class ChatViewModel: ObservableObject {
     @Published var messages: [Message] = []
     @Published var isTyping = false
     @Published var errorMessage: String?
+    @Published var lastActionResults: [ActionResult] = []
+    @Published var showConfirmButton = false
     
     let chatService = ChatService()
     
@@ -60,6 +62,8 @@ class ChatViewModel: ObservableObject {
         
         isTyping = true
         errorMessage = nil
+        lastActionResults = []
+        showConfirmButton = false
         
         Task {
             await chatService.sendMessage(trimmed)
@@ -75,25 +79,59 @@ class ChatViewModel: ObservableObject {
                     )
                     errorMessage = error
                 } else {
-                    var finalContent = chatService.streamingText
-                    
-                    // Append action confirmations
-                    if !chatService.executedActions.isEmpty {
-                        let confirmations = chatService.executedActions.map { "✅ \($0)" }.joined(separator: "\n")
-                        finalContent += "\n\n\(confirmations)"
-                    }
+                    let finalContent = chatService.streamingText
                     
                     messages[lastIndex] = Message(
                         content: finalContent,
                         sender: .ai,
                         timestamp: Date()
                     )
+                    
+                    // Store action results for interactive display
+                    lastActionResults = chatService.executedActions
+                    
+                    // Detect if AI is awaiting confirmation (proposed but no actions executed)
+                    showConfirmButton = chatService.executedActions.isEmpty && looksLikeProposal(finalContent)
                 }
             }
             
             isTyping = false
             saveChatHistory()
         }
+    }
+    
+    // MARK: - Confirm Proposal
+    
+    func confirmProposal() {
+        showConfirmButton = false
+        sendMessage("确认")
+    }
+    
+    private func looksLikeProposal(_ text: String) -> Bool {
+        let confirmKeywords = ["确认", "确定", "没问题就", "回复", "同意", "是否添加", "是否创建", "要我添加", "要我创建", "帮你添加", "帮你创建"]
+        let lower = text.lowercased()
+        return confirmKeywords.contains { lower.contains($0) } ||
+               lower.contains("confirm") ||
+               lower.contains("shall i") ||
+               lower.contains("want me to")
+    }
+    
+    // MARK: - Undo Action
+    
+    func undoAction(_ result: ActionResult) {
+        chatService.undoAction(result)
+        lastActionResults.removeAll { $0.id == result.id }
+    }
+    
+    // MARK: - Delete Message
+    
+    func deleteMessage(_ message: Message) {
+        messages.removeAll { $0.id == message.id }
+        saveChatHistory()
+    }
+    
+    func copyMessageContent(_ message: Message) {
+        UIPasteboard.general.string = message.content
     }
     
     // MARK: - Streaming Update

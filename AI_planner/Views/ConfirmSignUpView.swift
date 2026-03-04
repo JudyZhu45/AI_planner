@@ -27,15 +27,10 @@ struct ConfirmSignUpView: View {
                     
                     // Header
                     VStack(spacing: AppTheme.Spacing.lg) {
-                        ZStack {
-                            Circle()
-                                .fill(AppTheme.secondaryTeal.opacity(0.15))
-                                .frame(width: 80, height: 80)
-                            
-                            Image(systemName: "envelope.badge.fill")
-                                .font(.system(size: 36, weight: .semibold))
-                                .foregroundColor(AppTheme.secondaryTeal)
-                        }
+                        Image("beaver-main")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
                         
                         VStack(spacing: AppTheme.Spacing.sm) {
                             Text("Verify Your Email")
@@ -55,15 +50,10 @@ struct ConfirmSignUpView: View {
                     if isConfirmed {
                         // Success state
                         VStack(spacing: AppTheme.Spacing.xl) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.green.opacity(0.15))
-                                    .frame(width: 60, height: 60)
-                                
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 30))
-                                    .foregroundColor(.green)
-                            }
+                            Image("beaver-success")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 80, height: 80)
                             
                             Text("Email Verified!")
                                 .font(AppTheme.Typography.headlineMedium)

@@ -52,15 +52,10 @@ struct SignUpView: View {
                         if signUpSuccess {
                             // Success state
                             VStack(spacing: AppTheme.Spacing.xl) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.green.opacity(0.15))
-                                        .frame(width: 60, height: 60)
-                                    
-                                    Image(systemName: "checkmark.circle.fill")
-                                        .font(.system(size: 30))
-                                        .foregroundColor(.green)
-                                }
+                                Image("beaver-success")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 80, height: 80)
                                 
                                 Button {
                                     dismiss()

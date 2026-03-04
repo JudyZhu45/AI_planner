@@ -14,6 +14,7 @@ class TodoViewModel: ObservableObject {
     @Published var showAddTodoSheet = false
     
     private let todosKey = "SavedTodos"
+    private let calendarSync = CalendarSyncService.shared
     
     init() {
         loadTodos()
@@ -22,7 +23,7 @@ class TodoViewModel: ObservableObject {
     // MARK: - CRUD Operations
     
     func addTodo(title: String, description: String, dueDate: Date, priority: TodoTask.TaskPriority) {
-        let newTodo = TodoTask(
+        var newTodo = TodoTask(
             title: title,
             description: description,
             isCompleted: false,
@@ -30,6 +31,9 @@ class TodoViewModel: ObservableObject {
             priority: priority,
             createdAt: Date()
         )
+        if let eventId = calendarSync.saveToCalendar(newTodo) {
+            newTodo.calendarEventId = eventId
+        }
         todos.append(newTodo)
         saveTodos()
         NotificationManager.shared.scheduleNotification(for: newTodo)
@@ -37,18 +41,30 @@ class TodoViewModel: ObservableObject {
     
     func updateTodo(_ todo: TodoTask) {
         if let index = todos.firstIndex(where: { $0.id == todo.id }) {
-            todos[index] = todo
+            var updatedTodo = todo
+            // Track completion timestamp changes
+            let wasCompleted = todos[index].isCompleted
+            if updatedTodo.isCompleted && !wasCompleted {
+                updatedTodo.completedAt = Date()
+            } else if !updatedTodo.isCompleted && wasCompleted {
+                updatedTodo.completedAt = nil
+            }
+            if let eventId = calendarSync.saveToCalendar(updatedTodo) {
+                updatedTodo.calendarEventId = eventId
+            }
+            todos[index] = updatedTodo
             saveTodos()
-            if todo.isCompleted {
-                NotificationManager.shared.cancelNotification(for: todo)
+            if updatedTodo.isCompleted {
+                NotificationManager.shared.cancelNotification(for: updatedTodo)
             } else {
-                NotificationManager.shared.scheduleNotification(for: todo)
+                NotificationManager.shared.scheduleNotification(for: updatedTodo)
             }
         }
     }
     
     func deleteTodo(at indexSet: IndexSet) {
         for index in indexSet {
+            calendarSync.removeFromCalendar(todos[index])
             NotificationManager.shared.cancelNotification(for: todos[index])
         }
         todos.remove(atOffsets: indexSet)
@@ -58,11 +74,14 @@ class TodoViewModel: ObservableObject {
     func toggleTodoCompletion(_ todo: TodoTask) {
         if let index = todos.firstIndex(where: { $0.id == todo.id }) {
             todos[index].isCompleted.toggle()
+            todos[index].completedAt = todos[index].isCompleted ? Date() : nil
             saveTodos()
             if todos[index].isCompleted {
                 NotificationManager.shared.cancelNotification(for: todos[index])
+                ToastManager.shared.show("Task completed", type: .success)
             } else {
                 NotificationManager.shared.scheduleNotification(for: todos[index])
+                ToastManager.shared.show("Task uncompleted", type: .info)
             }
         }
     }
@@ -72,6 +91,9 @@ class TodoViewModel: ObservableObject {
         var newTask = task
         newTask.id = UUID()
         newTask.createdAt = Date()
+        if let eventId = calendarSync.saveToCalendar(newTask) {
+            newTask.calendarEventId = eventId
+        }
         todos.append(newTask)
         saveTodos()
         NotificationManager.shared.scheduleNotification(for: newTask)
@@ -80,10 +102,28 @@ class TodoViewModel: ObservableObject {
     /// Delete a task by its UUID (used by AI chat service)
     func deleteTodoById(_ id: UUID) {
         if let index = todos.firstIndex(where: { $0.id == id }) {
+            calendarSync.removeFromCalendar(todos[index])
             NotificationManager.shared.cancelNotification(for: todos[index])
             todos.remove(at: index)
             saveTodos()
         }
+    }
+    
+    // MARK: - Calendar Sync
+    
+    /// Sync all existing tasks to the iOS Calendar
+    func syncAllTasksToCalendar() {
+        todos = calendarSync.syncAllToCalendar(todos)
+        saveTodos()
+    }
+    
+    /// Remove all app events from iOS Calendar
+    func removeAllTasksFromCalendar() {
+        calendarSync.removeAllFromCalendar(todos)
+        for i in todos.indices {
+            todos[i].calendarEventId = nil
+        }
+        saveTodos()
     }
     
     // MARK: - Data Management

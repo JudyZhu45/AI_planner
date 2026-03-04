@@ -1,0 +1,27 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Body -->
+  <ellipse cx="60" cy="70" rx="20" ry="25" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <!-- Head -->
+  <circle cx="60" cy="40" r="18" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+  <!-- Eyes -->
+  <circle cx="53" cy="38" r="3" fill="#000"/>
+  <circle cx="67" cy="38" r="3" fill="#000"/>
+  <!-- Eye highlights -->
+  <circle cx="52" cy="37" r="1" fill="#FFF"/>
+  <circle cx="66" cy="37" r="1" fill="#FFF"/>
+  <!-- Happy mouth -->
+  <path d="M52 45 Q60 50, 68 45" stroke="#000" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <!-- Teeth -->
+  <rect x="57" y="48" width="3" height="6" rx="0.5" fill="#FFF"/>
+  <rect x="60" y="48" width="3" height="6" rx="0.5" fill="#FFF"/>
+  <!-- Raised arm -->
+  <path d="M45 60 L35 45" stroke="#8B4513" stroke-width="6" stroke-linecap="round"/>
+  <!-- Dam (platform) -->
+  <g transform="translate(0, 90)">
+    <rect x="20" y="0" width="80" height="8" rx="2" fill="#654321"/>
+    <rect x="25" y="8" width="70" height="8" rx="2" fill="#654321"/>
+    <rect x="30" y="16" width="60" height="8" rx="2" fill="#654321"/>
+    <!-- Water splash -->
+    <path d="M20 5 Q15 8, 10 12" stroke="#4A90E2" stroke-width="2" fill="none" opacity="0.8"/>
+  </g>
+</svg>

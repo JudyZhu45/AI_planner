@@ -19,6 +19,8 @@ struct TodoTask: Identifiable, Codable {
     var priority: TaskPriority
     var createdAt: Date
     var eventType: EventType = .other // New: categorize events
+    var calendarEventId: String? // iOS Calendar event identifier for sync
+    var completedAt: Date? // Timestamp when task was marked complete
     
     enum TaskPriority: String, Codable {
         case low = "Low"

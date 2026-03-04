@@ -27,9 +27,10 @@ struct AI_plannerApp: App {
                             .ignoresSafeArea()
                         
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            ProgressView()
-                                .scaleEffect(1.2)
-                                .tint(AppTheme.primaryDeepIndigo)
+                            Image("beaver-loading")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 80, height: 80)
                             
                             Text("AI Planner")
                                 .font(AppTheme.Typography.headlineLarge)

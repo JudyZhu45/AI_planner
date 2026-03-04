@@ -36,24 +36,10 @@ struct LoginView: View {
                         
                         // Logo & Title
                         VStack(spacing: AppTheme.Spacing.lg) {
-                            ZStack {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                AppTheme.primaryDeepIndigo,
-                                                AppTheme.secondaryTeal
-                                            ]),
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 80, height: 80)
-                                
-                                Image(systemName: "brain.head.profile.fill")
-                                    .font(.system(size: 36, weight: .semibold))
-                                    .foregroundColor(AppTheme.textInverse)
-                            }
+                            Image("beaver-main")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
                             
                             VStack(spacing: AppTheme.Spacing.sm) {
                                 Text("AI Planner")

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		B8DBC348527C73195DA3A6FA /* amplifyconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 7A4AB6A3BC24ADA696B62CE2 /* amplifyconfiguration.json */; };
 		D981203D2F4E5DC7002C5CB1 /* Secrets.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = D981203C2F4E5DC7002C5CB1 /* Secrets.xcconfig */; };
+		D981203F2F4F6C9C002C5CB1 /* Resume_AI_Planner.md in Resources */ = {isa = PBXBuildFile; fileRef = D981203E2F4F6C9C002C5CB1 /* Resume_AI_Planner.md */; };
 		D9FBB1382F4B79610091F21E /* AWSCognitoAuthPlugin in Frameworks */ = {isa = PBXBuildFile; productRef = D9FBB1372F4B79610091F21E /* AWSCognitoAuthPlugin */; };
 		D9FBB13A2F4B796C0091F21E /* Amplify in Frameworks */ = {isa = PBXBuildFile; productRef = D9FBB1392F4B796C0091F21E /* Amplify */; };
 		FD699F998AD48E4A75CE307D /* awsconfiguration.json in Resources */ = {isa = PBXBuildFile; fileRef = 401E93A01296BDD193189AF7 /* awsconfiguration.json */; };
@@ -18,12 +19,37 @@
 		401E93A01296BDD193189AF7 /* awsconfiguration.json */ = {isa = PBXFileReference; explicitFileType = text.json; path = awsconfiguration.json; sourceTree = "<group>"; };
 		7A4AB6A3BC24ADA696B62CE2 /* amplifyconfiguration.json */ = {isa = PBXFileReference; explicitFileType = text.json; path = amplifyconfiguration.json; sourceTree = "<group>"; };
 		D981203C2F4E5DC7002C5CB1 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Secrets.xcconfig; sourceTree = "<group>"; };
+		D981203E2F4F6C9C002C5CB1 /* Resume_AI_Planner.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Resume_AI_Planner.md; sourceTree = "<group>"; };
 		D99AFE342F470F8400881929 /* AI_planner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AI_planner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		D9089F7A2F58A781001599A7 /* Exceptions for "AI_planner" folder in "AI_planner" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				docs/BeaverTheme.swift.reference,
+			);
+			target = D99AFE332F470F8400881929 /* AI_planner */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		D9089F7B2F58A781001599A7 /* Exceptions for "AI_planner" folder in "Compile Sources" phase from "AI_planner" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = D99AFE302F470F8400881929 /* Sources */;
+			membershipExceptions = (
+				docs/BeaverTheme.swift.reference,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D99AFE362F470F8400881929 /* AI_planner */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				D9089F7A2F58A781001599A7 /* Exceptions for "AI_planner" folder in "AI_planner" target */,
+				D9089F7B2F58A781001599A7 /* Exceptions for "AI_planner" folder in "Compile Sources" phase from "AI_planner" target */,
+			);
 			path = AI_planner;
 			sourceTree = "<group>";
 		};
@@ -59,6 +85,7 @@
 				98E102A1C0B0A9252DFF10E7 /* AmplifyConfig */,
 				D9FBB1362F4B79610091F21E /* Frameworks */,
 				D981203C2F4E5DC7002C5CB1 /* Secrets.xcconfig */,
+				D981203E2F4F6C9C002C5CB1 /* Resume_AI_Planner.md */,
 			);
 			sourceTree = "<group>";
 		};
@@ -146,6 +173,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D981203F2F4F6C9C002C5CB1 /* Resume_AI_Planner.md in Resources */,
 				D981203D2F4E5DC7002C5CB1 /* Secrets.xcconfig in Resources */,
 				FD699F998AD48E4A75CE307D /* awsconfiguration.json in Resources */,
 				B8DBC348527C73195DA3A6FA /* amplifyconfiguration.json in Resources */,

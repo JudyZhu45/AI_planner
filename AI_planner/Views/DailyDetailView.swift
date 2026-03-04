@@ -16,6 +16,8 @@ struct DailyDetailView: View {
     
     @State private var showAddEventSheet = false
     @State private var editingTask: TodoTask?
+    @State private var taskToDelete: TodoTask?
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         ZStack {
@@ -69,13 +71,17 @@ struct DailyDetailView: View {
                             icon: "calendar.badge.plus",
                             title: "No events scheduled",
                             subtitle: "Add an event to get started",
+                            assetImage: "beaver-empty",
                             buttonTitle: "Add Event",
                             onAction: { showAddEventSheet = true }
                         )
                     } else {
                         VStack(alignment: .leading, spacing: AppTheme.Spacing.xl) {
                             ForEach(tasks, id: \.id) { task in
-                                TimeBlockCard(task: task, viewModel: viewModel)
+                                TimeBlockCard(task: task, viewModel: viewModel, onDelete: {
+                                    taskToDelete = task
+                                    showDeleteConfirmation = true
+                                })
                                     .contentShape(Rectangle())
                                     .onTapGesture {
                                         editingTask = task
@@ -106,6 +112,28 @@ struct DailyDetailView: View {
                 editingTask: task
             )
         }
+        .confirmationDialog(
+            "Delete \"\(taskToDelete?.title ?? "")\"?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let task = taskToDelete,
+                   let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                    let deletedTask = viewModel.todos[index]
+                    viewModel.deleteTodo(at: IndexSet(integer: index))
+                    ToastManager.shared.show("Task deleted", type: .error) {
+                        viewModel.addEvent(deletedTask)
+                    }
+                }
+                taskToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                taskToDelete = nil
+            }
+        } message: {
+            Text("This action cannot be undone.")
+        }
     }
 }
 
@@ -113,6 +141,7 @@ struct DailyDetailView: View {
 struct TimeBlockCard: View {
     var task: TodoTask
     @ObservedObject var viewModel: TodoViewModel
+    var onDelete: (() -> Void)?
     
     var body: some View {
         let eventColor = getEventColor(for: task)
@@ -168,7 +197,7 @@ struct TimeBlockCard: View {
                 Spacer()
                 
                 Button(action: {
-                    viewModel.deleteTodo(at: IndexSet(integer: viewModel.todos.firstIndex(where: { $0.id == task.id }) ?? 0))
+                    onDelete?()
                 }) {
                     Image(systemName: "trash")
                         .font(.system(size: 12, weight: .semibold))

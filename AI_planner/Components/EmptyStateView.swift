@@ -11,15 +11,23 @@ struct EmptyStateView: View {
     let icon: String
     let title: String
     let subtitle: String
+    var assetImage: String? = nil
     var buttonTitle: String? = nil
     var onAction: (() -> Void)? = nil
     var compact: Bool = false
     
     var body: some View {
         VStack(spacing: compact ? AppTheme.Spacing.md : AppTheme.Spacing.lg) {
-            Image(systemName: icon)
-                .font(.system(size: compact ? 36 : 48, weight: .light))
-                .foregroundColor(AppTheme.secondaryTeal.opacity(0.4))
+            if let assetImage {
+                Image(assetImage)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: compact ? 60 : 80, height: compact ? 60 : 80)
+            } else {
+                Image(systemName: icon)
+                    .font(.system(size: compact ? 36 : 48, weight: .light))
+                    .foregroundColor(AppTheme.secondaryTeal.opacity(0.4))
+            }
             
             VStack(spacing: AppTheme.Spacing.sm) {
                 Text(title)

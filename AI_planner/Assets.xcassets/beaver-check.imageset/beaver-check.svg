@@ -1,0 +1,6 @@
+<svg width="120" height="120" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Beaver head silhouette -->
+  <path d="M20 25 C20 18, 25 15, 32 15 C38 15, 42 18, 42 25 L42 35 C42 40, 38 42, 32 42 C28 42, 24 40, 22 37" fill="#8B4513"/>
+  <!-- Checkmark -->
+  <path d="M22 37 L28 43 L45 26" stroke="#4A90E2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

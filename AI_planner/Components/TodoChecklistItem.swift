@@ -11,6 +11,7 @@ struct TodoChecklistItem: View {
     let task: TodoTask
     let onToggle: () -> Void
     let onDelete: () -> Void
+    @State private var completionProgress: CGFloat = 0
     
     var body: some View {
         HStack(spacing: AppTheme.Spacing.md) {
@@ -42,12 +43,31 @@ struct TodoChecklistItem: View {
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(AppTheme.bgSecondary)
+        .background(
+            ZStack {
+                AppTheme.bgSecondary
+                
+                GeometryReader { geo in
+                    Rectangle()
+                        .fill(AppTheme.secondaryTeal.opacity(0.08))
+                        .frame(width: geo.size.width * completionProgress)
+                }
+                .clipped()
+            }
+        )
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
                 .stroke(AppTheme.borderColor, lineWidth: 1)
         )
+        .onAppear {
+            completionProgress = task.isCompleted ? 1.0 : 0.0
+        }
+        .onChange(of: task.isCompleted) { _, newValue in
+            withAnimation(.easeInOut(duration: 0.4)) {
+                completionProgress = newValue ? 1.0 : 0.0
+            }
+        }
     }
 }
 

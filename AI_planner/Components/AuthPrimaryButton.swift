@@ -17,8 +17,10 @@ struct AuthPrimaryButton: View {
         Button(action: action) {
             HStack(spacing: AppTheme.Spacing.sm) {
                 if isLoading {
-                    ProgressView()
-                        .tint(AppTheme.textInverse)
+                    Image("beaver-loading")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 22, height: 22)
                 }
                 Text(title)
                     .font(AppTheme.Typography.titleLarge)

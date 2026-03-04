@@ -8,26 +8,39 @@
 import SwiftUI
 
 struct TypingIndicator: View {
-    @State private var animating = false
+    @State private var bouncing = false
     
     var body: some View {
         HStack(alignment: .bottom, spacing: AppTheme.Spacing.md) {
-            HStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { index in
-                    Circle()
-                        .fill(AppTheme.textTertiary)
-                        .frame(width: 7, height: 7)
-                        .offset(y: animating ? -4 : 0)
-                        .animation(
-                            .easeInOut(duration: 0.4)
-                            .repeatForever(autoreverses: true)
-                            .delay(Double(index) * 0.15),
-                            value: animating
-                        )
+            HStack(spacing: AppTheme.Spacing.sm) {
+                Image("beaver-loading")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 32, height: 32)
+                    .rotationEffect(.degrees(bouncing ? -5 : 5))
+                    .animation(
+                        .easeInOut(duration: 0.6)
+                        .repeatForever(autoreverses: true),
+                        value: bouncing
+                    )
+                
+                HStack(spacing: 3) {
+                    ForEach(0..<3, id: \.self) { index in
+                        Circle()
+                            .fill(AppTheme.primaryDeepIndigo.opacity(0.5))
+                            .frame(width: 5, height: 5)
+                            .offset(y: bouncing ? -3 : 0)
+                            .animation(
+                                .easeInOut(duration: 0.4)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.15),
+                                value: bouncing
+                            )
+                    }
                 }
             }
             .padding(.horizontal, AppTheme.Spacing.lg)
-            .padding(.vertical, AppTheme.Spacing.md)
+            .padding(.vertical, AppTheme.Spacing.sm)
             .background(AppTheme.bgTertiary)
             .clipShape(
                 RoundedRectangle(
@@ -40,7 +53,7 @@ struct TypingIndicator: View {
         }
         .padding(.horizontal, AppTheme.Spacing.lg)
         .onAppear {
-            animating = true
+            bouncing = true
         }
     }
 }

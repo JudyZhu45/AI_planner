@@ -12,6 +12,9 @@ struct TodayView: View {
     @State private var showAddEventSheet = false
     @State private var editingEvent: TodoTask?
     @State private var editingTodo: TodoTask?
+    @State private var taskToDelete: TodoTask?
+    @State private var showDeleteConfirmation = false
+    @State private var showSwipeHint: Bool = !UserDefaults.standard.bool(forKey: "hasShownSwipeHint")
     
     // Get today's scheduled events (with time)
     var todayScheduledEvents: [TodoTask] {
@@ -76,6 +79,8 @@ struct TodayView: View {
                             Text("\(completionPercentage)%")
                                 .font(AppTheme.Typography.labelLarge)
                                 .foregroundColor(AppTheme.secondaryTeal)
+                                .contentTransition(.numericText())
+                                .animation(.spring(response: 0.4), value: completionPercentage)
                         }
                         
                         GeometryReader { geometry in
@@ -95,6 +100,7 @@ struct TodayView: View {
                                         )
                                     )
                                     .frame(width: geometry.size.width * CGFloat(completionPercentage) / 100)
+                                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: completionPercentage)
                             }
                         }
                         .frame(height: 6)
@@ -106,6 +112,15 @@ struct TodayView: View {
                 
                 // Use a List here so swipeActions work reliably on rows (left-swipe to reveal delete)
                 List {
+                    // Swipe hint for first-time users
+                    if showSwipeHint && (!todayScheduledEvents.isEmpty || !todayTodos.isEmpty) {
+                        SwipeHintOverlay()
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
+                            .onDisappear { showSwipeHint = false }
+                    }
+                    
                     // Schedule Timeline Section
                     if !todayScheduledEvents.isEmpty {
                         Section(header: SectionHeader(title: "Schedule", icon: "clock.fill")) {
@@ -113,9 +128,8 @@ struct TodayView: View {
                                 ScheduleCard(
                                     task: task,
                                     onDelete: {
-                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
-                                            viewModel.deleteTodo(at: IndexSet(integer: index))
-                                        }
+                                        taskToDelete = task
+                                        showDeleteConfirmation = true
                                     }
                                 )
                                 .contentShape(Rectangle())
@@ -124,14 +138,14 @@ struct TodayView: View {
                                 }
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
-                                            viewModel.deleteTodo(at: IndexSet(integer: index))
-                                        }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button {
+                                        taskToDelete = task
+                                        showDeleteConfirmation = true
                                     } label: {
                                         Label("Delete", systemImage: "trash.fill")
                                     }
+                                    .tint(AppTheme.accentCoral)
                                 }
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
@@ -158,9 +172,8 @@ struct TodayView: View {
                                         viewModel.toggleTodoCompletion(task)
                                     },
                                     onDelete: {
-                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
-                                            viewModel.deleteTodo(at: IndexSet(integer: index))
-                                        }
+                                        taskToDelete = task
+                                        showDeleteConfirmation = true
                                     }
                                 )
                                 .contentShape(Rectangle())
@@ -169,14 +182,14 @@ struct TodayView: View {
                                 }
                                 .listRowBackground(Color.clear)
                                 .listRowSeparator(.hidden)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        if let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
-                                            viewModel.deleteTodo(at: IndexSet(integer: index))
-                                        }
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button {
+                                        taskToDelete = task
+                                        showDeleteConfirmation = true
                                     } label: {
                                         Label("Delete", systemImage: "trash.fill")
                                     }
+                                    .tint(AppTheme.accentCoral)
                                 }
                                 .swipeActions(edge: .leading, allowsFullSwipe: true) {
                                     Button {
@@ -199,6 +212,7 @@ struct TodayView: View {
                             icon: "sparkles",
                             title: "No tasks for today",
                             subtitle: "Start planning your day by adding events or tasks",
+                            assetImage: "beaver-empty",
                             buttonTitle: "Add Event",
                             onAction: { showAddEventSheet = true }
                         )
@@ -226,6 +240,29 @@ struct TodayView: View {
         }
         .sheet(item: $editingTodo) { task in
             AddTodoSheet(viewModel: viewModel, editingTask: task)
+        }
+        .confirmationDialog(
+            "Delete \"\(taskToDelete?.title ?? "")\"?",
+            isPresented: $showDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let task = taskToDelete,
+                   let index = viewModel.todos.firstIndex(where: { $0.id == task.id }) {
+                    let deletedTask = viewModel.todos[index]
+                    viewModel.deleteTodo(at: IndexSet(integer: index))
+                    ToastManager.shared.show("Task deleted", type: .error) {
+                        // Undo: re-add the task
+                        viewModel.addEvent(deletedTask)
+                    }
+                }
+                taskToDelete = nil
+            }
+            Button("Cancel", role: .cancel) {
+                taskToDelete = nil
+            }
+        } message: {
+            Text("This action cannot be undone.")
         }
     }
 }

@@ -254,6 +254,7 @@ struct SelectedDayPreviewView: View {
                     icon: "calendar.badge.plus",
                     title: "No events scheduled",
                     subtitle: "Tap \"View All\" to add events for this day",
+                    assetImage: "beaver-empty",
                     compact: true
                 )
                 .background(AppTheme.bgTertiary)

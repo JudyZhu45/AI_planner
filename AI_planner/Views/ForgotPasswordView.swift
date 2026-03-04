@@ -28,15 +28,10 @@ struct ForgotPasswordView: View {
                     
                     // Header
                     VStack(spacing: AppTheme.Spacing.lg) {
-                        ZStack {
-                            Circle()
-                                .fill(AppTheme.accentCoral.opacity(0.15))
-                                .frame(width: 80, height: 80)
-                            
-                            Image(systemName: "key.fill")
-                                .font(.system(size: 36, weight: .semibold))
-                                .foregroundColor(AppTheme.accentCoral)
-                        }
+                        Image("beaver-main")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 100, height: 100)
                         
                         VStack(spacing: AppTheme.Spacing.sm) {
                             Text(isResetComplete ? "Password Reset!" : showResetForm ? "Reset Password" : "Forgot Password")
