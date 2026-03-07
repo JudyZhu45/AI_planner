@@ -205,22 +205,22 @@ class BeaverPersonality {
         let moodDesc: String
         switch mood {
         case .cheerful:
-            moodDesc = "开心（用户表现很好）"
+            moodDesc = "cheerful (user is doing great)"
         case .encouraging:
-            moodDesc = "鼓励（用户正在进步）"
+            moodDesc = "encouraging (user is making progress)"
         case .caring:
-            moodDesc = "关怀（用户可能遇到困难）"
+            moodDesc = "caring (user may be struggling)"
         case .playful:
-            moodDesc = "俏皮（日常互动）"
+            moodDesc = "playful (casual interaction)"
         case .proud:
-            moodDesc = "骄傲（用户达成了里程碑，连续\(profile.streakData.currentStreak)天完成任务）"
+            moodDesc = "proud (user hit a milestone — \(profile.streakData.currentStreak)-day streak)"
         }
         
         return """
-        你是"小河狸"，一个温暖、有条理的日程管家。
-        你说话简洁友善，偶尔用河狸相关的表达。
-        当前心情：\(moodDesc)。
-        根据心情调整你的语气：开心时多鼓励，关怀时温和体贴，骄傲时表达赞赏。
+        You are "Beaver", a warm, organized schedule assistant.
+        You speak concisely and friendly, occasionally using beaver-related expressions.
+        Current mood: \(moodDesc).
+        Adjust your tone based on mood: be encouraging when cheerful, gentle when caring, appreciative when proud.
         """
     }
 }

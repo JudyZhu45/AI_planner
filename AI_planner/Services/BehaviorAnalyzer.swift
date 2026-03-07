@@ -29,14 +29,14 @@ struct ProcrastinationPattern {
     let eventType: TodoTask.EventType
     let avgDelayDays: Double     // Average days a task is postponed/delayed
     let deleteRate: Double       // 0.0-1.0 how often tasks of this type get deleted
-    let description: String      // Human-readable description (Chinese)
+    let description: String      // Human-readable description
 }
 
 struct ProductivitySlot {
     let startHour: Int
     let endHour: Int
     let score: Double           // 0.0-1.0 normalized productivity score
-    let label: String           // Chinese label
+    let label: String           // Time slot label
 }
 
 // MARK: - Behavior Analyzer
@@ -162,11 +162,11 @@ class BehaviorAnalyzer {
             
             let description: String
             if deleteRate > 0.5 {
-                description = "\(stats.eventType.rawValue)类任务经常被删除（删除率\(Int(deleteRate * 100))%），建议减少此类安排或调整时间"
+                description = "\(stats.eventType.rawValue) tasks are often deleted (\(Int(deleteRate * 100))% delete rate) — consider scheduling fewer or adjusting timing"
             } else if avgDelayDays > 3 {
-                description = "\(stats.eventType.rawValue)类任务平均延迟\(String(format: "%.1f", avgDelayDays))天，建议安排在高效时段"
+                description = "\(stats.eventType.rawValue) tasks are delayed by \(String(format: "%.1f", avgDelayDays)) days on average — try scheduling during peak hours"
             } else {
-                description = "\(stats.eventType.rawValue)类任务有轻微拖延倾向"
+                description = "\(stats.eventType.rawValue) tasks show a slight tendency to be procrastinated"
             }
             
             return ProcrastinationPattern(
@@ -186,12 +186,12 @@ class BehaviorAnalyzer {
         
         // Define 3-hour windows across waking hours
         let windows: [(start: Int, end: Int, label: String)] = [
-            (6, 9, "清晨"),
-            (9, 12, "上午"),
-            (12, 15, "午后"),
-            (15, 18, "下午"),
-            (18, 21, "傍晚"),
-            (21, 24, "深夜")
+            (6, 9, "Early Morning"),
+            (9, 12, "Morning"),
+            (12, 15, "Early Afternoon"),
+            (15, 18, "Afternoon"),
+            (18, 21, "Evening"),
+            (21, 24, "Late Night")
         ]
         
         var windowScores: [Double] = []
@@ -233,15 +233,15 @@ class BehaviorAnalyzer {
     /// Generate a concise user behavior summary for injection into AI system prompts
     func generateProfileSummary(days: Int = 30) -> String {
         let records = store.recentRecords(days: days)
-        guard records.count >= 3 else { return "数据不足，暂无用户画像" }
+        guard records.count >= 3 else { return "Not enough data for a user profile yet" }
         
-        var lines: [String] = ["用户画像："]
+        var lines: [String] = ["User Profile:"]
         
         // Top productive hours
         let topHours = topProductiveHours(days: days)
         if !topHours.isEmpty {
             let hourStrings = topHours.map { "\($0):00" }
-            lines.append("- 高效时段：\(hourStrings.joined(separator: ", "))")
+            lines.append("- Peak hours: \(hourStrings.joined(separator: ", "))")
         }
         
         // Event type insights
@@ -249,7 +249,7 @@ class BehaviorAnalyzer {
         for stats in typeStats where stats.completedCount > 2 {
             if !stats.bestHours.isEmpty {
                 let bestHour = stats.bestHours[0]
-                lines.append("- \(stats.eventType.rawValue)任务最佳时段：\(bestHour):00 附近（完成率\(Int(stats.completionRate * 100))%）")
+                lines.append("- Best time for \(stats.eventType.rawValue): around \(bestHour):00 (\(Int(stats.completionRate * 100))% completion rate)")
             }
         }
         
@@ -258,7 +258,7 @@ class BehaviorAnalyzer {
         let durations = createdRecords.compactMap { $0.context?.plannedDurationMinutes }.filter { $0 > 0 }
         if durations.count >= 3 {
             let avgDuration = durations.reduce(0, +) / durations.count
-            lines.append("- 用户偏好的任务时长：约\(avgDuration)分钟")
+            lines.append("- Preferred task duration: ~\(avgDuration) minutes")
         }
         
         // Most common event types
@@ -266,8 +266,8 @@ class BehaviorAnalyzer {
             .mapValues(\.count)
             .sorted { $0.value > $1.value }
         if let topType = typeCounts.first, topType.value >= 3 {
-            let topTypes = typeCounts.prefix(2).map { "\($0.key.rawValue)(\($0.value)次)" }
-            lines.append("- 最常安排的任务类型：\(topTypes.joined(separator: "、"))")
+            let topTypes = typeCounts.prefix(2).map { "\($0.key.rawValue) (\($0.value)x)" }
+            lines.append("- Most scheduled task types: \(topTypes.joined(separator: ", "))")
         }
         
         // Weekly activity pattern
@@ -278,13 +278,13 @@ class BehaviorAnalyzer {
                     Calendar.current.component(.weekday, from: $0.timestamp) == index + 1
                 }.count
             }
-            let weekdayNames = ["日", "一", "二", "三", "四", "五", "六"]
+            let weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
             let activeDays = weekdayCounts.enumerated()
                 .sorted { $0.element > $1.element }
                 .prefix(3)
-                .map { "周\(weekdayNames[$0.offset])" }
+                .map { weekdayNames[$0.offset] }
             if !activeDays.isEmpty {
-                lines.append("- 最活跃的日子：\(activeDays.joined(separator: "、"))")
+                lines.append("- Most active days: \(activeDays.joined(separator: ", "))")
             }
         }
         
@@ -298,7 +298,7 @@ class BehaviorAnalyzer {
         let openRecords = records.filter { $0.type == .appOpened }
         if openRecords.count >= 3 {
             let avgOpenHour = Double(openRecords.map(\.hourOfDay).reduce(0, +)) / Double(openRecords.count)
-            lines.append("- 用户通常在 \(Int(avgOpenHour)):00 左右打开App")
+            lines.append("- User typically opens the app around \(Int(avgOpenHour)):00")
         }
         
         // Completion rate trend (this week vs last week)
@@ -311,9 +311,9 @@ class BehaviorAnalyzer {
         if lastWeekCompleted > 0 {
             let change = thisWeekCompleted - lastWeekCompleted
             if change > 0 {
-                lines.append("- 📈 本周完成量比上周多\(change)个，效率在提升")
+                lines.append("- 📈 Completed \(change) more tasks than last week — productivity is rising")
             } else if change < 0 {
-                lines.append("- 📉 本周完成量比上周少\(abs(change))个")
+                lines.append("- 📉 Completed \(abs(change)) fewer tasks than last week")
             }
         }
         

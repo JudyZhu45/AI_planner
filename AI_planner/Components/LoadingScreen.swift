@@ -14,10 +14,10 @@ struct LoadingScreen: View {
     @State private var sparkleRotation: Double = 0
     
     let loadingTexts = [
-        "正在唤醒海狸...",
-        "整理你的时间...",
-        "准备智能建议...",
-        "即将就绪..."
+        "Waking up the beaver...",
+        "Organizing your schedule...",
+        "Preparing smart suggestions...",
+        "Almost ready..."
     ]
     
     let onComplete: () -> Void
@@ -99,7 +99,7 @@ struct LoadingScreen: View {
                     .foregroundColor(AppTheme.primaryDeepIndigo)
                 
                 // Tagline
-                Text("懂你的时间管家")
+                Text("Your smart schedule buddy")
                     .font(.subheadline)
                     .foregroundColor(AppTheme.textSecondary)
                 
@@ -153,7 +153,7 @@ struct LoadingScreen: View {
                 Spacer()
                 
                 // Footer quote
-                Text("\"勤劳的海狸，聪明地建造\"")
+                Text("\"Busy beavers build smart\"")
                     .font(.caption)
                     .italic()
                     .foregroundColor(AppTheme.textTertiary)

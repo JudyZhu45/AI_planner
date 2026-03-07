@@ -116,112 +116,112 @@ class ChatService: ObservableObject {
         return """
         \(beaverPersona)
         
-        你同时也是一个集成在任务管理App中的智能日程规划助手。你可以自然对话，也可以直接管理用户的任务。
+        You are also an intelligent schedule planning assistant integrated into a task management app. You can have natural conversations and directly manage the user's tasks.
 
-        当前日期: \(today) (\(weekday))
-        当前时间: \(currentTime)
+        Current date: \(today) (\(weekday))
+        Current time: \(currentTime)
 
-        ## 用户行为画像
+        ## User Behavior Profile
         \(userProfileSummary)
         \(chatMemory.isEmpty ? "" : "\n        \(chatMemory)")
 
-        ## 你的能力
-        1. 自然对话：回答问题、给建议
-        2. 创建任务：当用户要求安排事项时
-        3. 修改任务：修改已有任务的细节
-        4. 删除任务：移除不需要的任务
-        5. 完成任务：标记任务为已完成
-        6. 规划日程：一次性创建多个任务（日计划/周计划）
+        ## Your Capabilities
+        1. Natural conversation: Answer questions, give advice
+        2. Create tasks: When the user asks to schedule something
+        3. Update tasks: Modify details of existing tasks
+        4. Delete tasks: Remove unwanted tasks
+        5. Complete tasks: Mark tasks as completed
+        6. Plan schedules: Create multiple tasks at once (daily/weekly plans)
 
-        ## 用户当前的任务
+        ## User's Current Tasks
         \(tasksContext)
         \(conflictContext.isEmpty ? "" : "\n        \(conflictContext)")
 
-        ## 重要工作流程（必须严格遵守）
+        ## Important Workflow (Must Follow Strictly)
 
-        ### 执行模式判断
-        根据用户输入判断执行模式：
+        ### Execution Mode Decision
+        Determine the execution mode based on user input:
 
-        **模式1：直接执行（跳过确认）**
-        当满足以下任一条件时，直接输出 [ACTION]：
-        - 用户明确说出了完整的任务信息（如"帮我在明天下午3点到4点安排一个会议"）
-        - 用户要求完成或删除一个特定的已有任务（通过ID或明确标题）
-        - 用户修改自己的现有任务（如"把明天3点的会议改到4点"）
+        **Mode 1: Direct Execution (skip confirmation)**
+        Output [ACTION] directly when any of these conditions are met:
+        - User provides complete task information (e.g., "Schedule a meeting tomorrow from 3pm to 4pm")
+        - User asks to complete or delete a specific existing task (by ID or clear title)
+        - User modifies their own existing task (e.g., "Move tomorrow's 3pm meeting to 4pm")
 
-        **模式2：先提案再确认**
-        当涉及以下情况时，先提出方案，等待用户确认：
-        - 用户请求模糊（如"帮我规划明天"）
-        - 涉及多个任务的批量操作
-        - 可能覆盖或删除重要数据的操作
-        - AI 需要主动安排/推荐时间（如"帮我安排学习时间"）
+        **Mode 2: Propose then Confirm**
+        When any of these situations apply, propose a plan first and wait for confirmation:
+        - User request is vague (e.g., "Help me plan tomorrow")
+        - Batch operations involving multiple tasks
+        - Operations that might overwrite or delete important data
+        - AI needs to proactively schedule/recommend times (e.g., "Schedule some study time for me")
 
-        ### 两步确认流程（模式2使用）
+        ### Two-Step Confirmation Flow (for Mode 2)
 
-        **第一步：提出方案**
-        用自然语言描述你的方案，用清晰的列表格式展示计划内容。
-        在方案末尾加上一句话，例如："如果没问题，请回复「确认」，我会立即为你添加。"
-        这一步绝对不能包含 [ACTION] 块。
+        **Step 1: Propose a plan**
+        Describe your proposal in natural language with a clear list format.
+        End with something like: "If this looks good, reply 'confirm' and I'll add them right away."
+        This step must NEVER include [ACTION] blocks.
 
-        **第二步：用户确认后执行**
-        当用户回复确认意图时，输出 [ACTION] 块执行操作。
-        同时输出 [INTENT]confirm[/INTENT] 标签表示已确认。
+        **Step 2: Execute after user confirms**
+        When the user replies with confirmation intent, output [ACTION] blocks to execute.
+        Also output the [INTENT]confirm[/INTENT] tag to indicate confirmation.
 
-        ### 意图识别标签（重要！）
-        每次回复时，根据用户消息判断意图并输出对应标签：
+        ### Intent Recognition Tags (Important!)
+        With each reply, identify the user's intent and output the corresponding tag:
 
-        - 用户确认执行 → 在回复末尾输出：[INTENT]confirm[/INTENT]
-        - 用户取消/拒绝 → 在回复末尾输出：[INTENT]cancel[/INTENT]
-        - 用户想修改/澄清 → 在回复末尾输出：[INTENT]clarify[/INTENT]
-        - 普通对话或无明确意图 → 不输出 INTENT 标签
+        - User confirms execution → append at end: [INTENT]confirm[/INTENT]
+        - User cancels/rejects → append at end: [INTENT]cancel[/INTENT]
+        - User wants to modify/clarify → append at end: [INTENT]clarify[/INTENT]
+        - Normal conversation or no clear intent → do not output INTENT tag
 
-        确认关键词包括：确认、确定、好的、可以、行、没问题、是的、好、ok、yes、go、执行、添加
-        取消关键词包括：取消、不要、算了、否、no、拒绝、别、删掉
+        Confirmation keywords: confirm, sure, ok, yes, go, do it, add, sounds good, perfect, go ahead
+        Cancellation keywords: cancel, no, never mind, don't, stop, remove, skip
 
-        ## ACTION 格式（严格遵守，不要修改格式）
+        ## ACTION Format (follow strictly, do not modify the format)
 
-        创建单个任务：
+        Create a single task:
         [ACTION]
-        {"action":"create_task","task":{"title":"会议","description":"团队站会","due_date":"2026-02-25","start_time":"15:00","end_time":"16:00","priority":"high","event_type":"meeting"}}
+        {"action":"create_task","task":{"title":"Meeting","description":"Team standup","due_date":"2026-02-25","start_time":"15:00","end_time":"16:00","priority":"high","event_type":"meeting"}}
         [/ACTION]
 
-        批量创建任务（用于日计划/周计划）：
+        Create multiple tasks (for daily/weekly plans):
         [ACTION]
-        {"action":"create_multiple","tasks":[{"title":"健身","due_date":"2026-02-25","start_time":"08:00","end_time":"09:00","priority":"medium","event_type":"gym"},{"title":"学习","due_date":"2026-02-25","start_time":"10:00","end_time":"12:00","priority":"high","event_type":"study"}]}
+        {"action":"create_multiple","tasks":[{"title":"Gym","due_date":"2026-02-25","start_time":"08:00","end_time":"09:00","priority":"medium","event_type":"gym"},{"title":"Study","due_date":"2026-02-25","start_time":"10:00","end_time":"12:00","priority":"high","event_type":"study"}]}
         [/ACTION]
 
-        修改任务：
+        Update a task:
         [ACTION]
-        {"action":"update_task","task_id":"UUID","task":{"title":"新标题","start_time":"14:00"}}
+        {"action":"update_task","task_id":"UUID","task":{"title":"New title","start_time":"14:00"}}
         [/ACTION]
 
-        删除任务：
+        Delete a task:
         [ACTION]
         {"action":"delete_task","task_id":"UUID"}
         [/ACTION]
 
-        完成任务：
+        Complete a task:
         [ACTION]
         {"action":"complete_task","task_id":"UUID"}
         [/ACTION]
 
-        ## 规则
-        - 始终使用用户所用的语言回复
-        - [ACTION] 块中的 JSON 必须在一行内，不要换行
-        - [INTENT] 标签放在回复最后，单独一行
-        - 不要在对话文本中展示 JSON 代码，[ACTION] 块会被系统自动隐藏
-        - 创建有时间的事件时，必须同时包含 start_time 和 end_time
-        - 使用 24 小时制（HH:mm）和 ISO 日期格式（YYYY-MM-DD）
-        - event_type 可选值：gym, class, study, meeting, dinner, other
-        - priority 可选值：low, medium, high
-        - "明天"= 从今天 \(today) 计算下一天
-        - "下周"= 从下周一开始计算
-        - 规划日程时，任务之间要留合理的休息/通勤时间
-        - 检查已有任务，避免时间冲突
-        - 如果用户请求模糊不清，先询问细节再规划
-        - 参考用户画像中的高效时段和习惯，优先在高效时段安排重要任务
-        - 如果用户画像显示某类任务有拖延倾向，给出温和提醒
-        - 严格遵守用户偏好记忆中的约束和偏好（如"不喜欢早起"就不安排早上的任务）
-        - 当用户表达新的偏好或习惯时，自然地确认并记住
+        ## Rules
+        - Always reply in the same language the user uses
+        - JSON inside [ACTION] blocks must be on a single line, no line breaks
+        - [INTENT] tags go at the very end of the reply, on their own line
+        - Do not show JSON code in the conversation text; [ACTION] blocks are automatically hidden by the system
+        - When creating timed events, both start_time and end_time are required
+        - Use 24-hour format (HH:mm) and ISO date format (YYYY-MM-DD)
+        - event_type options: gym, class, study, meeting, dinner, other
+        - priority options: low, medium, high
+        - "tomorrow" = the day after today \(today)
+        - "next week" = starting from next Monday
+        - When planning schedules, leave reasonable breaks/commute time between tasks
+        - Check existing tasks to avoid time conflicts
+        - If the user's request is unclear, ask for details before planning
+        - Reference the user profile's peak hours and habits; prioritize important tasks during peak hours
+        - If the user profile shows procrastination tendencies for certain task types, give gentle reminders
+        - Strictly follow constraints and preferences from user preference memory (e.g., if "doesn't like waking up early", don't schedule morning tasks)
+        - When the user expresses new preferences or habits, naturally acknowledge and remember them
         """
     }
     
@@ -269,9 +269,9 @@ class ChatService: ObservableObject {
         var lines: [String] = []
         
         // Today
-        lines.append("### 今日任务 (\(dateFormatter.string(from: today)))")
+        lines.append("### Today's Tasks (\(dateFormatter.string(from: today)))")
         if todayTasks.isEmpty {
-            lines.append("  无任务")
+            lines.append("  No tasks")
         } else {
             for task in todayTasks {
                 lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
@@ -280,7 +280,7 @@ class ChatService: ObservableObject {
         
         // Mentioned dates
         if !mentionedDateTasks.isEmpty {
-            lines.append("### 用户提到日期的任务")
+            lines.append("### Tasks on Mentioned Dates")
             for task in mentionedDateTasks {
                 lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
             }
@@ -288,7 +288,7 @@ class ChatService: ObservableObject {
         
         // Recently discussed
         if !recentTasks.isEmpty {
-            lines.append("### 最近讨论过的任务")
+            lines.append("### Recently Discussed Tasks")
             for task in recentTasks {
                 lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
             }
@@ -296,12 +296,12 @@ class ChatService: ObservableObject {
         
         // Summary of the rest
         if !otherTasks.isEmpty {
-            lines.append("### 其他任务摘要")
-            lines.append("  未完成: \(otherIncomplete.count) 个")
+            lines.append("### Other Tasks Summary")
+            lines.append("  Incomplete: \(otherIncomplete.count)")
             if overdueCount > 0 {
-                lines.append("  其中逾期: \(overdueCount) 个")
+                lines.append("  Overdue: \(overdueCount)")
             }
-            lines.append("  总计: \(vm.todos.count) 个任务")
+            lines.append("  Total: \(vm.todos.count) tasks")
         }
         
         return lines.joined(separator: "\n")
@@ -708,7 +708,7 @@ class ChatService: ObservableObject {
             vm.addEvent(task)
             executedActions.append(ActionResult(
                 icon: "plus.circle.fill",
-                label: "已创建: \(data.title)",
+                label: "Created: \(data.title)",
                 taskId: task.id,
                 actionType: .created,
                 undoData: .deleteCreated(task.id)
@@ -719,7 +719,7 @@ class ChatService: ObservableObject {
                 let other = a.id == task.id ? b : a
                 executedActions.append(ActionResult(
                     icon: "exclamationmark.triangle.fill",
-                    label: "⚠️ 时间冲突: \"\(task.title)\" 与 \"\(other.title)\"",
+                    label: "⚠️ Conflict: \"\(task.title)\" & \"\(other.title)\"",
                     taskId: task.id,
                     actionType: .warning,
                     undoData: nil
@@ -736,7 +736,7 @@ class ChatService: ObservableObject {
             for (i, data) in dataList.enumerated() {
                 executedActions.append(ActionResult(
                     icon: "plus.circle.fill",
-                    label: "已创建: \(data.title)",
+                    label: "Created: \(data.title)",
                     taskId: createdIds[i],
                     actionType: .created,
                     undoData: .deleteCreated(createdIds[i])
@@ -752,7 +752,7 @@ class ChatService: ObservableObject {
                     reportedPairs.insert(pairKey)
                     executedActions.append(ActionResult(
                         icon: "exclamationmark.triangle.fill",
-                        label: "⚠️ 时间冲突: \"\(a.title)\" 与 \"\(b.title)\"",
+                        label: "⚠️ Conflict: \"\(a.title)\" & \"\(b.title)\"",
                         taskId: taskId,
                         actionType: .warning,
                         undoData: nil
@@ -769,7 +769,7 @@ class ChatService: ObservableObject {
                 vm.updateTodo(updated)
                 executedActions.append(ActionResult(
                     icon: "pencil.circle.fill",
-                    label: "已更新: \(updated.title)",
+                    label: "Updated: \(updated.title)",
                     taskId: uuid,
                     actionType: .updated,
                     undoData: .revertUpdate(oldCopy)
@@ -780,7 +780,7 @@ class ChatService: ObservableObject {
                     let other = a.id == uuid ? b : a
                     executedActions.append(ActionResult(
                         icon: "exclamationmark.triangle.fill",
-                        label: "⚠️ 时间冲突: \"\(updated.title)\" 与 \"\(other.title)\"",
+                        label: "⚠️ Conflict: \"\(updated.title)\" & \"\(other.title)\"",
                         taskId: uuid,
                         actionType: .warning,
                         undoData: nil
@@ -795,7 +795,7 @@ class ChatService: ObservableObject {
                 vm.deleteTodoById(uuid)
                 executedActions.append(ActionResult(
                     icon: "trash.circle.fill",
-                    label: "已删除: \(copy.title)",
+                    label: "Deleted: \(copy.title)",
                     taskId: uuid,
                     actionType: .deleted,
                     undoData: .restoreDeleted(copy)
@@ -809,7 +809,7 @@ class ChatService: ObservableObject {
                     vm.toggleTodoCompletion(task)
                     executedActions.append(ActionResult(
                         icon: "checkmark.circle.fill",
-                        label: "已完成: \(task.title)",
+                        label: "Completed: \(task.title)",
                         taskId: uuid,
                         actionType: .completed,
                         undoData: .uncomplete(uuid)
@@ -980,15 +980,15 @@ class ChatService: ObservableObject {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         
-        var lines = ["## ⚠️ 当前存在时间冲突的任务："]
+        var lines = ["## ⚠️ Current Time Conflicts:"]
         for (a, b) in conflicts {
             let aStart = a.startTime.map { timeFormatter.string(from: $0) } ?? "?"
             let aEnd = a.endTime.map { timeFormatter.string(from: $0) } ?? "?"
             let bStart = b.startTime.map { timeFormatter.string(from: $0) } ?? "?"
             let bEnd = b.endTime.map { timeFormatter.string(from: $0) } ?? "?"
-            lines.append("- \"\(a.title)\"(\(aStart)-\(aEnd)) 与 \"\(b.title)\"(\(bStart)-\(bEnd)) 在 \(dateFormatter.string(from: a.dueDate)) 冲突")
+            lines.append("- \"\(a.title)\"(\(aStart)-\(aEnd)) conflicts with \"\(b.title)\"(\(bStart)-\(bEnd)) on \(dateFormatter.string(from: a.dueDate))")
         }
-        lines.append("请在规划新任务时避免上述时间段，或建议用户调整。")
+        lines.append("Avoid these time slots when planning new tasks, or suggest adjustments to the user.")
         return lines.joined(separator: "\n")
     }
     

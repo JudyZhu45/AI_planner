@@ -12,6 +12,7 @@ struct MindfulCalendarView: View {
     @State private var currentMonth = Date()
     @State private var selectedDate = Date()
     @State private var showDailyDetail = false
+    @State private var showAddEventSheet = false
     @Namespace private var calendarNamespace
     
     var body: some View {
@@ -138,7 +139,8 @@ struct MindfulCalendarView: View {
                                 date: selectedDate,
                                 tasks: CalendarHelper.getTasksForDay(viewModel.todos, date: selectedDate),
                                 namespace: calendarNamespace,
-                                showDailyDetail: $showDailyDetail
+                                showDailyDetail: $showDailyDetail,
+                                onAddEvent: { showAddEventSheet = true }
                             )
                             .padding(.horizontal, AppTheme.Spacing.lg)
                         }
@@ -158,6 +160,9 @@ struct MindfulCalendarView: View {
                 isPresented: $showDailyDetail,
                 namespace: calendarNamespace
             )
+        }
+        .sheet(isPresented: $showAddEventSheet) {
+            AddEventSheet(viewModel: viewModel, isPresented: $showAddEventSheet, selectedDate: selectedDate)
         }
     }
     
@@ -304,6 +309,7 @@ struct SelectedDayPreviewView: View {
     var tasks: [TodoTask]
     var namespace: Namespace.ID
     @Binding var showDailyDetail: Bool
+    var onAddEvent: () -> Void = {}
     
     var body: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
@@ -340,7 +346,7 @@ struct SelectedDayPreviewView: View {
             }
             
             if tasks.isEmpty {
-                EmptyStateView(type: .calendar) { }
+                EmptyStateView(type: .calendar, action: onAddEvent)
                 .background(AppTheme.bgTertiary.opacity(0.55))
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             } else {

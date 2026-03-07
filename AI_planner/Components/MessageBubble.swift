@@ -105,13 +105,13 @@ struct MessageBubble: View {
                             Button {
                                 onCopy?()
                             } label: {
-                                Label("复制", systemImage: "doc.on.doc")
+                                Label("Copy", systemImage: "doc.on.doc")
                             }
                             
                             Button(role: .destructive) {
                                 onDelete?()
                             } label: {
-                                Label("删除", systemImage: "trash")
+                                Label("Delete", systemImage: "trash")
                             }
                         }
                 }

@@ -18,34 +18,34 @@ enum EmptyStateType {
         case .tasks:
             return EmptyStateConfig(
                 icon: "🦫",
-                title: "今天还没有任务呢",
-                description: "海狸已经准备好了，添加第一个任务开始吧！",
-                actionText: "添加任务",
-                tip: "💡 小贴士：把大任务拆成小步骤，更容易完成哦"
+                title: "No tasks yet",
+                description: "Beaver is ready! Add your first task to get started.",
+                actionText: "Add Task",
+                tip: "💡 Tip: Break big tasks into smaller steps — they're easier to finish!"
             )
         case .calendar:
             return EmptyStateConfig(
                 icon: "📅",
-                title: "日历空空如也",
-                description: "规划你的时间，让每一天都充实起来",
-                actionText: "创建日程",
-                tip: "💡 小贴士：在高效时段安排重要任务"
+                title: "Nothing scheduled",
+                description: "Plan your time and make every day count.",
+                actionText: "Add Event",
+                tip: "💡 Tip: Schedule important tasks during your peak productivity hours."
             )
         case .analytics:
             return EmptyStateConfig(
                 icon: "📊",
-                title: "数据还在积累中",
-                description: "使用一段时间后，这里会显示你的效率分析",
-                actionText: "去添加任务",
-                tip: "💡 小贴士：坚持记录，AI 会更懂你"
+                title: "Still collecting data",
+                description: "Use the app for a while and your efficiency insights will appear here.",
+                actionText: "Add Task",
+                tip: "💡 Tip: Keep tracking — the AI will get to know you better over time."
             )
         case .notifications:
             return EmptyStateConfig(
                 icon: "🔔",
-                title: "没有新通知",
-                description: "海狸帮你盯着呢，有重要消息会第一时间告诉你",
-                actionText: "查看设置",
-                tip: "💡 小贴士：可以在设置里调整通知偏好"
+                title: "No new notifications",
+                description: "Beaver is keeping an eye out — you'll be the first to know!",
+                actionText: "View Settings",
+                tip: "💡 Tip: You can adjust your notification preferences in Settings."
             )
         }
     }

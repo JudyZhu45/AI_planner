@@ -23,8 +23,8 @@ struct InsightCard: Identifiable {
     let id = UUID()
     let type: InsightType
     let icon: String            // SF Symbol name
-    let title: String           // Short title (Chinese)
-    let description: String     // Detail description (Chinese)
+    let title: String           // Short title
+    let description: String     // Detail description
     let color: Color            // Card accent color
     let priority: Int           // Higher = more important (for sorting)
     let createdAt: Date
@@ -92,8 +92,8 @@ class InsightGenerator {
                 return InsightCard(
                     type: .completionMilestone,
                     icon: "flame.fill",
-                    title: "连续\(m)天完成任务！",
-                    description: streak >= 7 ? "太棒了！你已经连续\(m)天保持任务完成记录，继续保持！" : "不错的开始！连续\(m)天完成任务，再接再厉！",
+                    title: "\(m)-day streak!",
+                    description: streak >= 7 ? "Amazing! You've completed tasks for \(m) days in a row — keep it up!" : "Great start! \(m) days of completing tasks — keep going!",
                     color: AppTheme.accentCoral,
                     priority: 90,
                     createdAt: Date()
@@ -110,8 +110,8 @@ class InsightGenerator {
                 return InsightCard(
                     type: .completionMilestone,
                     icon: "star.fill",
-                    title: "完成\(m)个任务！",
-                    description: "你已经累计完成了\(m)个任务，生产力满满！",
+                    title: "\(m) tasks completed!",
+                    description: "You've completed a total of \(m) tasks — you're on a roll!",
                     color: AppTheme.secondaryTeal,
                     priority: 85,
                     createdAt: Date()
@@ -149,8 +149,8 @@ class InsightGenerator {
             return InsightCard(
                 type: .productivityTrend,
                 icon: "arrow.up.right.circle.fill",
-                title: "效率提升\(changePercent)%",
-                description: "本周完成\(thisWeekCompleted)个任务，比上周多\(thisWeekCompleted - lastWeekCompleted)个，保持势头！",
+                title: "Productivity up \(changePercent)%",
+                description: "You completed \(thisWeekCompleted) tasks this week, \(thisWeekCompleted - lastWeekCompleted) more than last week. Keep the momentum!",
                 color: AppTheme.secondaryTeal,
                 priority: 70,
                 createdAt: Date()
@@ -160,8 +160,8 @@ class InsightGenerator {
             return InsightCard(
                 type: .productivityTrend,
                 icon: "arrow.down.right.circle.fill",
-                title: "本周完成量有所下降",
-                description: "本周完成\(thisWeekCompleted)个任务，比上周少一些。可以尝试先从简单任务开始。",
+                title: "Completions dipped this week",
+                description: "You completed \(thisWeekCompleted) tasks this week, a bit fewer than last week. Try starting with easier tasks.",
                 color: AppTheme.primaryDeepIndigo,
                 priority: 60,
                 createdAt: Date()
@@ -177,14 +177,14 @@ class InsightGenerator {
         let topHours = analyzer.topProductiveHours(days: 30)
         guard !topHours.isEmpty else { return nil }
         
-        let hourStr = topHours.prefix(2).map { "\($0):00" }.joined(separator: "和")
+        let hourStr = topHours.prefix(2).map { "\($0):00" }.joined(separator: " and ")
         markShown(.timeRecommendation)
         
         return InsightCard(
             type: .timeRecommendation,
             icon: "clock.badge.checkmark.fill",
-            title: "你的高效时段",
-            description: "数据显示你在\(hourStr)左右最高效，建议把重要任务安排在这些时段。",
+            title: "Your peak hours",
+            description: "Data shows you're most productive around \(hourStr). Schedule important tasks during these times.",
             color: AppTheme.secondaryTeal,
             priority: 50,
             createdAt: Date()
@@ -210,8 +210,8 @@ class InsightGenerator {
                 return InsightCard(
                     type: .procrastinationAlert,
                     icon: "exclamationmark.triangle.fill",
-                    title: "\(typeTasks.count)个\(type.rawValue)任务待完成",
-                    description: "你有\(typeTasks.count)个\(type.rawValue)任务已逾期，要不要现在处理最简单的那个？",
+                    title: "\(typeTasks.count) \(type.rawValue) tasks overdue",
+                    description: "You have \(typeTasks.count) overdue \(type.rawValue) tasks. Want to tackle the easiest one now?",
                     color: AppTheme.accentCoral,
                     priority: 80,
                     createdAt: Date()
@@ -235,8 +235,8 @@ class InsightGenerator {
                     return InsightCard(
                         type: .patternDiscovery,
                         icon: "lightbulb.fill",
-                        title: "发现你的\(stat.eventType.rawValue)习惯",
-                        description: "你的\(stat.eventType.rawValue)任务通常在\(hourInt):00完成，完成率高达\(Int(stat.completionRate * 100))%。要固定这个时间吗？",
+                        title: "Found your \(stat.eventType.rawValue) pattern",
+                        description: "You usually complete \(stat.eventType.rawValue) tasks around \(hourInt):00, with a \(Int(stat.completionRate * 100))% completion rate. Want to make this a regular time?",
                         color: AppTheme.primaryDeepIndigo,
                         priority: 40,
                         createdAt: Date()

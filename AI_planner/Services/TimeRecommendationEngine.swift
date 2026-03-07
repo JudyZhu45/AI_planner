@@ -14,7 +14,7 @@ struct TimeRecommendation: Identifiable {
     let endHour: Int
     let endMinute: Int
     let confidence: Double      // 0.0-1.0
-    let reason: String          // Chinese explanation
+    let reason: String          // Explanation for the recommendation
     let conflictWarning: String? // Optional conflict note
     
     var startTimeString: String {
@@ -95,16 +95,16 @@ class TimeRecommendationEngine {
             if bestHours.contains(startHour) {
                 score += 0.3
                 if let rate = typePref?.completionRate, rate > 0 {
-                    reasons.append("你在这个时段完成\(eventType.rawValue)的成功率为\(Int(rate * 100))%")
+                    reasons.append("Your \(eventType.rawValue) completion rate is \(Int(rate * 100))% during this time")
                 } else {
-                    reasons.append("这是你效率最高的时段之一")
+                    reasons.append("This is one of your most productive time slots")
                 }
             }
             
             // Boost: matches peak productivity hours
             if profile.peakProductivityHours.contains(startHour) && !bestHours.contains(startHour) {
                 score += 0.15
-                reasons.append("这是你的高效时段")
+                reasons.append("This is your peak productivity period")
             }
             
             // Penalty: procrastination-prone hours
@@ -115,7 +115,7 @@ class TimeRecommendationEngine {
                 let energyProfile = EnergyAnalysisService.buildProfile(from: existingTasks)
                 if energyProfile.procrastinationSlots.contains(startHour) {
                     score -= 0.2
-                    reasons.append("此时段容易拖延，建议避开")
+                    reasons.append("You tend to procrastinate during this time — consider avoiding it")
                 }
             }
             
@@ -141,10 +141,10 @@ class TimeRecommendationEngine {
                 return bufferStart < slot.end && bufferEnd > slot.start
             }
             
-            let conflictWarning: String? = nearbyConflict ? "与其他事件间隔较近" : nil
+            let conflictWarning: String? = nearbyConflict ? "Very close to another event" : nil
             if nearbyConflict { score -= 0.05 }
             
-            let reason = reasons.isEmpty ? "此时段空闲可用" : reasons.first!
+            let reason = reasons.isEmpty ? "This time slot is available" : reasons.first!
             
             candidates.append((startMin, endMin, min(1.0, max(0.0, score)), reason, conflictWarning))
         }
@@ -175,17 +175,17 @@ class TimeRecommendationEngine {
         let defaults: [(hour: Int, reason: String)] = {
             switch eventType {
             case .gym:
-                return [(8, "上午运动开启活力一天"), (17, "下午运动放松身心"), (19, "晚间运动消除疲劳")]
+                return [(8, "Morning workout to start your day"), (17, "Afternoon exercise to unwind"), (19, "Evening workout to relieve stress")]
             case .class_:
-                return [(9, "上午注意力集中适合上课"), (14, "午后可安排课程"), (10, "上午时段适合学习")]
+                return [(9, "Morning focus is ideal for class"), (14, "Afternoon slot for lectures"), (10, "Mid-morning works well for learning")]
             case .study:
-                return [(9, "上午是学习的黄金时段"), (14, "午后适合深度学习"), (20, "晚上安静适合复习")]
+                return [(9, "Morning is the golden hour for studying"), (14, "Afternoon suits deep study"), (20, "Quiet evenings are great for review")]
             case .meeting:
-                return [(10, "上午开会效率更高"), (14, "午后适合团队讨论"), (16, "下午安排简短会议")]
+                return [(10, "Morning meetings are more efficient"), (14, "Afternoon is good for team discussions"), (16, "Late afternoon for quick meetings")]
             case .dinner:
-                return [(18, "标准晚餐时间"), (19, "稍晚的晚餐"), (17, "早一点的晚餐")]
+                return [(18, "Standard dinner time"), (19, "Slightly later dinner"), (17, "Early dinner")]
             case .other:
-                return [(10, "上午安排杂事效率高"), (14, "午后处理日常事务"), (16, "下午完成剩余事项")]
+                return [(10, "Morning is efficient for errands"), (14, "Afternoon for daily tasks"), (16, "Late afternoon to wrap things up")]
             }
         }()
         
@@ -213,7 +213,7 @@ class TimeRecommendationEngine {
                 endMinute: endMin % 60,
                 confidence: 0.4,
                 reason: reason,
-                conflictWarning: hasConflict ? "与现有事件时间冲突" : nil
+                conflictWarning: hasConflict ? "Conflicts with an existing event" : nil
             )
         }.filter { $0.conflictWarning == nil } // Only show non-conflicting defaults
     }

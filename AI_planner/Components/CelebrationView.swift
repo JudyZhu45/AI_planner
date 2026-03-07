@@ -48,11 +48,11 @@ struct CelebrationView: View {
                     
                     if showMessage {
                         VStack(spacing: 4) {
-                            Text("太棒了！又完成一个！")
+                            Text("Awesome! Another one done!")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(AppTheme.secondaryTeal)
                             
-                            Text("海狸为你骄傲 🦫✨")
+                            Text("Beaver is proud of you 🦫✨")
                                 .font(.subheadline)
                                 .foregroundColor(AppTheme.textSecondary)
                         }
