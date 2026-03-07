@@ -16,22 +16,70 @@ struct MindfulCalendarView: View {
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.30)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.10),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 30,
+                    endRadius: 260
+                )
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Header
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
-                    Text("Calendar")
-                        .font(AppTheme.Typography.displayMedium)
-                        .foregroundColor(AppTheme.primaryDeepIndigo)
+                    HStack(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Calendar")
+                                .font(AppTheme.Typography.displayMedium)
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
+
+                            Text("See your rhythm, spot busy days, and zoom into the details.")
+                                .font(AppTheme.Typography.bodySmall)
+                                .foregroundColor(AppTheme.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Text("\(CalendarHelper.getTasksForDay(viewModel.todos, date: selectedDate).count) plans")
+                            .font(AppTheme.Typography.labelMedium)
+                            .foregroundColor(AppTheme.primaryDeepIndigo)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(AppTheme.bgElevated)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                            )
+                    }
                     
                     // Month/Year Selector
                     HStack {
                         Button(action: { previousMonth() }) {
-                            Image(systemName: "chevron.left.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(AppTheme.secondaryTeal)
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
+                                .frame(width: 38, height: 38)
+                                .background(AppTheme.bgElevated)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                                )
                         }
                         
                         Spacer()
@@ -43,15 +91,31 @@ struct MindfulCalendarView: View {
                         Spacer()
                         
                         Button(action: { nextMonth() }) {
-                            Image(systemName: "chevron.right.circle.fill")
-                                .font(.system(size: 24))
-                                .foregroundColor(AppTheme.secondaryTeal)
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
+                                .frame(width: 38, height: 38)
+                                .background(AppTheme.bgElevated)
+                                .clipShape(Circle())
+                                .overlay(
+                                    Circle()
+                                        .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                                )
                         }
                     }
                 }
                 .padding(AppTheme.Spacing.lg)
-                .background(AppTheme.bgSecondary)
-                .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.78), lineWidth: 1)
+                )
+                .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
                 
                 ScrollView {
                     VStack(spacing: AppTheme.Spacing.xxl) {
@@ -131,6 +195,7 @@ struct CalendarGridView: View {
                         Text(day)
                             .font(AppTheme.Typography.labelMedium)
                             .foregroundColor(AppTheme.textSecondary)
+                            .textCase(.uppercase)
                     }
                     .frame(maxWidth: .infinity)
                     .frame(height: 36)
@@ -162,17 +227,29 @@ struct CalendarGridView: View {
                         // Selected background
                         if isSelected {
                             RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                .fill(AppTheme.secondaryTeal.opacity(0.15))
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            AppTheme.accentGold.opacity(0.18),
+                                            AppTheme.secondaryTeal.opacity(0.14)
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
                                 .matchedGeometryEffect(id: "selectedCircle", in: namespace)
                         } else if isToday {
                             RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                .stroke(AppTheme.secondaryTeal, lineWidth: 2)
+                                .stroke(AppTheme.accentGold, lineWidth: 1.5)
+                        } else {
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.md)
+                                .fill(AppTheme.bgElevated.opacity(0.55))
                         }
                         
                         VStack(spacing: 4) {
                             Text("\(day)")
                                 .font(AppTheme.Typography.headlineSmall)
-                                .foregroundColor(isSelected ? AppTheme.secondaryTeal : AppTheme.textPrimary)
+                                .foregroundColor(isSelected ? AppTheme.primaryDeepIndigo : AppTheme.textPrimary)
                             
                             // Task indicators
                             if !dayTasks.isEmpty {
@@ -194,6 +271,10 @@ struct CalendarGridView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                     .frame(height: 60)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppTheme.Radius.md)
+                            .stroke(isSelected ? AppTheme.accentGold.opacity(0.1) : AppTheme.borderColor.opacity(0.45), lineWidth: 1)
+                    )
                     .onTapGesture {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedDate = date
@@ -203,12 +284,13 @@ struct CalendarGridView: View {
             }
         }
         .padding(AppTheme.Spacing.md)
-        .background(AppTheme.bgSecondary)
+    .background(AppTheme.bgElevated)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(AppTheme.borderColor, lineWidth: 1)
+        .stroke(AppTheme.borderColor.opacity(0.9), lineWidth: 1)
         )
+    .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
     }
     
     func getEventColor(for task: TodoTask) -> EventColor {
@@ -245,13 +327,21 @@ struct SelectedDayPreviewView: View {
                         Image(systemName: "arrow.right")
                             .font(.system(size: 10, weight: .semibold))
                     }
-                    .foregroundColor(AppTheme.secondaryTeal)
+                    .foregroundColor(AppTheme.primaryDeepIndigo)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(AppTheme.bgElevated)
+                    .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                    )
                 }
             }
             
             if tasks.isEmpty {
                 EmptyStateView(type: .calendar) { }
-                .background(AppTheme.bgTertiary)
+                .background(AppTheme.bgTertiary.opacity(0.55))
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             } else {
                 VStack(spacing: AppTheme.Spacing.sm) {
@@ -281,19 +371,36 @@ struct SelectedDayPreviewView: View {
                             Spacer()
                         }
                         .padding(AppTheme.Spacing.md)
-                        .background(color.light)
+                        .background(
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.md, style: .continuous)
+                                .fill(
+                                    LinearGradient(
+                                        colors: [
+                                            color.light.opacity(0.82),
+                                            AppTheme.bgElevated
+                                        ],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.md)
+                                .stroke(color.primary.opacity(0.16), lineWidth: 1)
+                        )
                     }
                 }
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(AppTheme.bgSecondary)
+        .background(AppTheme.bgElevated)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(AppTheme.borderColor, lineWidth: 1)
+                .stroke(AppTheme.borderColor.opacity(0.9), lineWidth: 1)
         )
+        .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
     }
     
     func getEventColor(for task: TodoTask) -> EventColor {

@@ -21,7 +21,15 @@ struct DailyDetailView: View {
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.28)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -34,7 +42,15 @@ struct DailyDetailView: View {
                             Text("Back")
                         }
                         .font(.system(size: 14, weight: .semibold, design: .rounded))
-                        .foregroundColor(AppTheme.secondaryTeal)
+                        .foregroundColor(AppTheme.primaryDeepIndigo)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                        .background(AppTheme.bgElevated)
+                        .clipShape(Capsule())
+                        .overlay(
+                            Capsule()
+                                .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                        )
                     }
                     
                     Spacer()
@@ -53,16 +69,30 @@ struct DailyDetailView: View {
                     Spacer()
                     
                     Button(action: { showAddEventSheet = true }) {
-                        Image(systemName: "pencil")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AppTheme.secondaryTeal)
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(AppTheme.primaryDeepIndigo)
+                            .frame(width: 36, height: 36)
+                            .background(AppTheme.bgElevated)
+                            .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                            )
                     }
                 }
                 .padding(.horizontal, AppTheme.Spacing.lg)
                 .padding(.vertical, AppTheme.Spacing.lg)
-                
-                Divider()
-                    .background(AppTheme.dividerColor)
+                .background(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                )
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
                 
                 // Time-block list
                 ScrollView {
@@ -168,6 +198,10 @@ struct TimeBlockCard: View {
                             .font(.system(size: 10, weight: .regular, design: .rounded))
                             .foregroundColor(AppTheme.textSecondary)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+                    .background(AppTheme.bgElevated.opacity(0.92))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
             }
             
@@ -197,16 +231,32 @@ struct TimeBlockCard: View {
                     Image(systemName: "trash")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(AppTheme.accentCoral)
+                        .frame(width: 28, height: 28)
+                        .background(AppTheme.bgElevated.opacity(0.85))
+                        .clipShape(Circle())
                 }
             }
         }
         .padding(AppTheme.Spacing.lg)
-        .background(eventColor.light)
-        .cornerRadius(AppTheme.Radius.lg)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                .fill(
+                    LinearGradient(
+                        colors: [
+                            eventColor.light.opacity(0.86),
+                            AppTheme.bgElevated
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(eventColor.primary.opacity(0.3), lineWidth: 1)
+                .stroke(eventColor.primary.opacity(0.22), lineWidth: 1)
         )
+        .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
     }
     
     func getEventColor(for task: TodoTask) -> EventColor {

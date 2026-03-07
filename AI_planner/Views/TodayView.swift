@@ -10,6 +10,7 @@ import SwiftUI
 struct TodayView: View {
     @ObservedObject var viewModel: TodoViewModel
     @State private var showAddEventSheet = false
+    @State private var showAddTodoSheet = false
     @State private var editingEvent: TodoTask?
     @State private var editingTodo: TodoTask?
     @State private var taskToDelete: TodoTask?
@@ -58,15 +59,57 @@ struct TodayView: View {
     var body: some View {
         ZStack {
             // Background
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.32)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.10),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 24,
+                    endRadius: 220
+                )
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Header Section
                 VStack(alignment: .leading, spacing: AppTheme.Spacing.md) {
-                    Text(currentDateString)
-                        .font(AppTheme.Typography.headlineLarge)
-                        .foregroundColor(AppTheme.primaryDeepIndigo)
+                    HStack(alignment: .top, spacing: AppTheme.Spacing.md) {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Today")
+                                .font(AppTheme.Typography.labelLarge)
+                                .foregroundColor(AppTheme.accentGold)
+                                .textCase(.uppercase)
+
+                            Text(currentDateString)
+                                .font(AppTheme.Typography.headlineLarge)
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
+                        }
+
+                        Spacer()
+
+                        Text("\(todayScheduledEvents.count + todayTodos.count) items")
+                            .font(AppTheme.Typography.labelMedium)
+                            .foregroundColor(AppTheme.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(AppTheme.bgElevated.opacity(0.96))
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                            )
+                    }
                     
                     // Dynamic beaver greeting
                     let greeting = BeaverPersonality.shared.greeting(tasks: viewModel.todos)
@@ -98,14 +141,14 @@ struct TodayView: View {
                         GeometryReader { geometry in
                             ZStack(alignment: .leading) {
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
-                                    .fill(AppTheme.bgTertiary)
+                                    .fill(AppTheme.bgTertiary.opacity(0.8))
                                 
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
                                     .fill(
                                         LinearGradient(
                                             gradient: Gradient(colors: [
                                                 AppTheme.secondaryTeal,
-                                                AppTheme.secondaryTeal.opacity(0.7)
+                                                AppTheme.accentGold.opacity(0.92)
                                             ]),
                                             startPoint: .leading,
                                             endPoint: .trailing
@@ -119,8 +162,17 @@ struct TodayView: View {
                     }
                 }
                 .padding(AppTheme.Spacing.lg)
-                .background(AppTheme.bgSecondary)
-                .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.75), lineWidth: 1)
+                )
+                .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
                 
                 // Insight Cards
                 if !insights.isEmpty {
@@ -151,93 +203,114 @@ struct TodayView: View {
                     }
                     
                     // Schedule Timeline Section
-                    if !todayScheduledEvents.isEmpty {
-                        Section(header: SectionHeader(title: "Schedule", icon: "clock.fill")) {
-                            ForEach(todayScheduledEvents) { task in
-                                ScheduleCard(
-                                    task: task,
-                                    onDelete: {
-                                        taskToDelete = task
-                                        showDeleteConfirmation = true
-                                    }
-                                )
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    editingEvent = task
+                    Section(header: SectionHeader(title: "Schedule", icon: "clock.fill")) {
+                        ForEach(todayScheduledEvents) { task in
+                            ScheduleCard(
+                                task: task,
+                                onDelete: {
+                                    taskToDelete = task
+                                    showDeleteConfirmation = true
                                 }
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button {
-                                        taskToDelete = task
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash.fill")
-                                    }
-                                    .tint(AppTheme.accentCoral)
+                            )
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                editingEvent = task
+                            }
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    taskToDelete = task
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash.fill")
                                 }
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
-                                        viewModel.toggleTodoCompletion(task)
-                                    } label: {
-                                        Label(
-                                            task.isCompleted ? "Undo" : "Complete",
-                                            systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
-                                        )
-                                    }
-                                    .tint(AppTheme.secondaryTeal)
+                                .tint(AppTheme.accentCoral)
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button {
+                                    viewModel.toggleTodoCompletion(task)
+                                } label: {
+                                    Label(
+                                        task.isCompleted ? "Undo" : "Complete",
+                                        systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
+                                    )
                                 }
+                                .tint(AppTheme.secondaryTeal)
                             }
                         }
+                        
+                        // Add Event button
+                        Button {
+                            showAddEventSheet = true
+                        } label: {
+                            HStack(spacing: AppTheme.Spacing.sm) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 16))
+                                Text("Add Event")
+                                    .font(AppTheme.Typography.titleMedium)
+                            }
+                            .foregroundColor(AppTheme.primaryDeepIndigo.opacity(0.6))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, AppTheme.Spacing.sm)
+                        }
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                     }
 
                     // Todo Checklist Section
-                    if !todayTodos.isEmpty {
-                        Section(header: SectionHeader(title: "To Do", icon: "checklist")) {
-                            ForEach(todayTodos) { task in
-                                TodoChecklistItem(
-                                    task: task,
-                                    onToggle: {
-                                        viewModel.toggleTodoCompletion(task)
-                                    },
-                                    onDelete: {
-                                        taskToDelete = task
-                                        showDeleteConfirmation = true
-                                    },
-                                    onEdit: {
-                                        editingTodo = task
-                                    }
-                                )
-                                .listRowBackground(Color.clear)
-                                .listRowSeparator(.hidden)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button {
-                                        taskToDelete = task
-                                        showDeleteConfirmation = true
-                                    } label: {
-                                        Label("Delete", systemImage: "trash.fill")
-                                    }
-                                    .tint(AppTheme.accentCoral)
+                    Section(header: SectionHeader(title: "To Do", icon: "checklist")) {
+                        ForEach(todayTodos) { task in
+                            TodoChecklistItem(
+                                task: task,
+                                onToggle: {
+                                    viewModel.toggleTodoCompletion(task)
+                                },
+                                onDelete: {
+                                    taskToDelete = task
+                                    showDeleteConfirmation = true
+                                },
+                                onEdit: {
+                                    editingTodo = task
                                 }
-                                .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                    Button {
-                                        viewModel.toggleTodoCompletion(task)
-                                    } label: {
-                                        Label(
-                                            task.isCompleted ? "Undo" : "Complete",
-                                            systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
-                                        )
-                                    }
-                                    .tint(AppTheme.secondaryTeal)
+                            )
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button {
+                                    taskToDelete = task
+                                    showDeleteConfirmation = true
+                                } label: {
+                                    Label("Delete", systemImage: "trash.fill")
                                 }
+                                .tint(AppTheme.accentCoral)
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button {
+                                    viewModel.toggleTodoCompletion(task)
+                                } label: {
+                                    Label(
+                                        task.isCompleted ? "Undo" : "Complete",
+                                        systemImage: task.isCompleted ? "arrow.uturn.backward" : "checkmark.circle.fill"
+                                    )
+                                }
+                                .tint(AppTheme.secondaryTeal)
                             }
                         }
-                    }
-
-                    // Empty State
-                    if todayScheduledEvents.isEmpty && todayTodos.isEmpty {
-                        EmptyStateView(type: .tasks) {
-                            showAddEventSheet = true
+                        
+                        // Add To Do button
+                        Button {
+                            showAddTodoSheet = true
+                        } label: {
+                            HStack(spacing: AppTheme.Spacing.sm) {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 16))
+                                Text("Add To Do")
+                                    .font(AppTheme.Typography.titleMedium)
+                            }
+                            .foregroundColor(AppTheme.secondaryTeal.opacity(0.6))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.vertical, AppTheme.Spacing.sm)
                         }
                         .listRowBackground(Color.clear)
                         .listRowSeparator(.hidden)
@@ -245,7 +318,7 @@ struct TodayView: View {
                 }
                 .listStyle(.plain)
                 .scrollContentBackground(.hidden)
-                .padding(.top, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
             }
         }
         .onAppear {
@@ -254,6 +327,9 @@ struct TodayView: View {
         }
         .sheet(isPresented: $showAddEventSheet) {
             AddEventSheet(viewModel: viewModel, isPresented: $showAddEventSheet)
+        }
+        .sheet(isPresented: $showAddTodoSheet) {
+            AddTodoSheet(viewModel: viewModel)
         }
         .sheet(item: $editingEvent) { task in
             AddEventSheet(
@@ -332,13 +408,16 @@ struct InsightCardView: View {
         }
         .padding(AppTheme.Spacing.md)
         .frame(width: 260)
-        .background(AppTheme.bgSecondary)
+        .background(
+            RoundedRectangle(cornerRadius: AppTheme.Radius.md, style: .continuous)
+                .fill(AppTheme.bgElevated)
+        )
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.md)
                 .stroke(insight.color.opacity(0.2), lineWidth: 1)
         )
-        .shadow(color: AppTheme.shadowColor, radius: 2, x: 0, y: 1)
+        .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
     }
 }
 

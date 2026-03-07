@@ -13,9 +13,15 @@ struct SectionHeader: View {
     
     var body: some View {
         HStack(spacing: AppTheme.Spacing.md) {
-            Image(systemName: icon)
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(AppTheme.secondaryTeal)
+            ZStack {
+                Circle()
+                    .fill(AppTheme.accentGold.opacity(0.16))
+                    .frame(width: 30, height: 30)
+
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(AppTheme.primaryDeepIndigo)
+            }
             
             Text(title)
                 .font(AppTheme.Typography.headlineSmall)

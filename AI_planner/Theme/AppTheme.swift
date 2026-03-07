@@ -9,33 +9,33 @@ import SwiftUI
 
 /**
  河狸日程 - 温暖木质设计系统
- Color Palette: "Warm & Natural" - 自然木质色系
- - Primary: Beaver Brown (河狸棕, 主色调)
- - Secondary: Moss Green (苔藓绿, 能量/完成)
- - Accent: Autumn Orange (秋橙, 强调/紧急)
+ Color Palette: "Warm Beaver" - 奶油纸感、木质棕调、蜂蜜强调
  */
 struct AppTheme {
-    // MARK: - Primary Colors (河狸核心色)
-    static let primaryDeepIndigo = Color(red: 0.490, green: 0.318, blue: 0.176) // 温暖深棕 #7D512D
-    static let secondaryTeal = Color(red: 0.380, green: 0.616, blue: 0.478) // 森林绿 #619D7A
-    static let accentCoral = Color(red: 0.867, green: 0.435, blue: 0.341) // 暖橙红 #DD6F57
+    // MARK: - Primary Colors (河狸 IP 主视觉)
+    static let primaryDeepIndigo = Color(red: 0.541, green: 0.353, blue: 0.235) // 河狸棕 #8A5A3C
+    static let secondaryTeal = Color(red: 0.435, green: 0.647, blue: 0.490) // 苔藓绿 #6FA57D
+    static let accentCoral = Color(red: 0.875, green: 0.514, blue: 0.420) // 柔和陶土 #DF836B
+    static let accentGold = Color(red: 0.851, green: 0.643, blue: 0.255) // 蜂蜜金 #D9A441
+    static let accentLavender = Color(red: 0.780, green: 0.690, blue: 0.600) // 暖燕麦雾棕 #C7B099
     
-    // MARK: - Background Colors (木质暖调)
-    static let bgPrimary = Color(red: 0.969, green: 0.957, blue: 0.933) // 奶油暖白 #F7F4EE
-    static let bgSecondary = Color(red: 0.996, green: 0.992, blue: 0.984) // 暖白 #FEFDFB
-    static let bgTertiary = Color(red: 0.937, green: 0.925, blue: 0.898) // 浅驼色 #EFECE5
-    static let bgElevated = Color(red: 0.988, green: 0.980, blue: 0.965) // 暖白提升
+    // MARK: - Background Colors (奶油纸张感)
+    static let bgPrimary = Color(red: 0.969, green: 0.953, blue: 0.925) // 奶油底 #F7F3EC
+    static let bgSecondary = Color(red: 0.991, green: 0.982, blue: 0.967) // 象牙白 #FDFBF7
+    static let bgTertiary = Color(red: 0.944, green: 0.914, blue: 0.867) // 浅燕麦 #F1E9DD
+    static let bgElevated = Color(red: 0.998, green: 0.994, blue: 0.987) // 提升卡片 #FFFDFB
+    static let bgOverlay = Color(red: 0.216, green: 0.153, blue: 0.102).opacity(0.14)
     
-    // MARK: - Text Colors (棕调文字)
-    static let textPrimary = Color(red: 0.200, green: 0.140, blue: 0.075) // 浓咖棕 #332413
-    static let textSecondary = Color(red: 0.490, green: 0.408, blue: 0.310) // 暖灰棕 #7D684F
-    static let textTertiary = Color(red: 0.655, green: 0.600, blue: 0.525) // 淡棕 #A79986
+    // MARK: - Text Colors
+    static let textPrimary = Color(red: 0.231, green: 0.169, blue: 0.122) // 深胡桃 #3B2B1F
+    static let textSecondary = Color(red: 0.482, green: 0.408, blue: 0.353) // 可可灰棕 #7B685A
+    static let textTertiary = Color(red: 0.655, green: 0.580, blue: 0.514) // 柔和棕灰 #A79483
     static let textInverse = Color.white
     
-    // MARK: - Semantic Colors (暖调语义色)
-    static let borderColor = Color(red: 0.880, green: 0.855, blue: 0.810) // 暖灰边框 #E0DACF
-    static let dividerColor = Color(red: 0.900, green: 0.878, blue: 0.840) // 暖灰分割 #E5E0D6
-    static let shadowColor = Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.10) // 棕调阴影
+    // MARK: - Semantic Colors
+    static let borderColor = Color(red: 0.890, green: 0.847, blue: 0.780) // 温柔描边 #E3D8C7
+    static let dividerColor = Color(red: 0.914, green: 0.882, blue: 0.831) // 分隔 #E9E1D4
+    static let shadowColor = Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.10)
     
     // MARK: - Event Type Colors (河狸自然色系)
     static let eventColors: [EventColor] = [
@@ -132,13 +132,13 @@ struct AppTheme {
         static let full: CGFloat = .infinity
     }
     
-    // MARK: - Shadows (棕调阴影)
+    // MARK: - Shadows
     enum Shadows {
-        static let xs = Shadow(color: Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.05), radius: 2, x: 0, y: 1)
-        static let sm = Shadow(color: Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.07), radius: 4, x: 0, y: 2)
-        static let md = Shadow(color: Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.08), radius: 6, x: 0, y: 4)
-        static let lg = Shadow(color: Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.10), radius: 15, x: 0, y: 10)
-        static let xl = Shadow(color: Color(red: 0.200, green: 0.140, blue: 0.075).opacity(0.12), radius: 24, x: 0, y: 12)
+        static let xs = Shadow(color: Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.04), radius: 2, x: 0, y: 1)
+        static let sm = Shadow(color: Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.06), radius: 6, x: 0, y: 3)
+        static let md = Shadow(color: Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.08), radius: 12, x: 0, y: 6)
+        static let lg = Shadow(color: Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.10), radius: 20, x: 0, y: 10)
+        static let xl = Shadow(color: Color(red: 0.231, green: 0.169, blue: 0.122).opacity(0.14), radius: 28, x: 0, y: 14)
     }
     
     struct Shadow {

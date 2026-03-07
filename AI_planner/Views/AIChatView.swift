@@ -29,12 +29,30 @@ struct AIChatView: View {
     @StateObject private var speechService = SpeechRecognitionService()
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
-    @State private var showMenu = false
     @State private var micPulse = false
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.30)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.10),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 20,
+                    endRadius: 240
+                )
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -126,23 +144,33 @@ struct AIChatView: View {
     private var headerView: some View {
         HStack(spacing: AppTheme.Spacing.md) {
             // AI Avatar in header
-            Image("beaver-main")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 36, height: 36)
-                .clipShape(Circle())
+            ZStack {
+                Circle()
+                    .fill(AppTheme.accentGold.opacity(0.12))
+                    .frame(width: 48, height: 48)
+
+                Circle()
+                    .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                    .frame(width: 48, height: 48)
+
+                Image("beaver-main")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 36, height: 36)
+                    .clipShape(Circle())
+            }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("AI Assistant")
+                Text("Planner Beaver")
                     .font(AppTheme.Typography.headlineSmall)
                     .foregroundColor(AppTheme.primaryDeepIndigo)
                 
                 HStack(spacing: 4) {
                     Circle()
-                        .fill(chatViewModel.isTyping ? AppTheme.secondaryTeal : Color.green)
+                        .fill(chatViewModel.isTyping ? AppTheme.accentGold : AppTheme.secondaryTeal)
                         .frame(width: 6, height: 6)
                     
-                    Text(chatViewModel.isTyping ? "Thinking..." : "Online")
+                    Text(chatViewModel.isTyping ? "Thinking with you..." : "Warm, ready, online")
                         .font(AppTheme.Typography.labelSmall)
                         .foregroundColor(AppTheme.textSecondary)
                 }
@@ -154,11 +182,15 @@ struct AIChatView: View {
             if chatViewModel.messages.count > 1 {
                 Text("\(chatViewModel.messages.count - 1)")
                     .font(.system(size: 10, weight: .bold))
-                    .foregroundColor(AppTheme.textSecondary)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(AppTheme.bgTertiary)
+                    .foregroundColor(AppTheme.primaryDeepIndigo)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 5)
+                    .background(AppTheme.bgElevated)
                     .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(AppTheme.borderColor.opacity(0.75), lineWidth: 1)
+                    )
             }
             
             Menu {
@@ -183,8 +215,17 @@ struct AIChatView: View {
         }
         .padding(.horizontal, AppTheme.Spacing.lg)
         .padding(.vertical, AppTheme.Spacing.md)
-        .background(AppTheme.bgSecondary)
-        .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
+        .background(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(AppTheme.bgElevated.opacity(0.96))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+        )
+        .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+        .padding(.horizontal, AppTheme.Spacing.lg)
+        .padding(.top, AppTheme.Spacing.md)
     }
     
     // MARK: - Input Area
@@ -211,6 +252,8 @@ struct AIChatView: View {
                         .frame(minHeight: 36, maxHeight: 120)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
                 
                 // Microphone button
                 Button {
@@ -223,7 +266,11 @@ struct AIChatView: View {
                         .foregroundColor(
                             speechService.isRecording ? AppTheme.accentCoral : AppTheme.textSecondary
                         )
-                        .frame(width: 32, height: 32)
+                        .frame(width: 38, height: 38)
+                        .background(
+                            Circle()
+                                .fill(speechService.isRecording ? AppTheme.accentCoral.opacity(0.12) : AppTheme.bgTertiary.opacity(0.75))
+                        )
                         .scaleEffect(micPulse ? 1.15 : 1.0)
                 }
                 .padding(.bottom, 2)
@@ -239,17 +286,28 @@ struct AIChatView: View {
                 // Send button
                 Button(action: sendMessage) {
                     Image(systemName: "arrow.up.circle.fill")
-                        .font(.system(size: 28))
-                        .foregroundColor(
-                            canSend ? AppTheme.secondaryTeal : AppTheme.textTertiary
+                        .font(.system(size: 30))
+                        .foregroundStyle(
+                            canSend
+                                ? LinearGradient(
+                                    colors: [AppTheme.primaryDeepIndigo, AppTheme.accentGold],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                                : LinearGradient(
+                                    colors: [AppTheme.textTertiary, AppTheme.textTertiary],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
                         )
+                        .scaleEffect(canSend ? 1.0 : 0.94)
                 }
                 .disabled(!canSend)
                 .padding(.bottom, 2)
             }
             .padding(.horizontal, AppTheme.Spacing.md)
             .padding(.vertical, AppTheme.Spacing.sm)
-            .background(AppTheme.bgSecondary)
+            .background(AppTheme.bgElevated)
             .clipShape(RoundedRectangle(cornerRadius: 22))
             .overlay(
                 RoundedRectangle(cornerRadius: 22)
@@ -259,13 +317,20 @@ struct AIChatView: View {
                         lineWidth: speechService.isRecording ? 2.0 : 1
                     )
             )
-            .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: -2)
+            .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
             .padding(.horizontal, AppTheme.Spacing.lg)
             .padding(.bottom, AppTheme.Spacing.md)
         }
         .background(
-            AppTheme.bgPrimary
-                .shadow(color: AppTheme.shadowColor, radius: 8, x: 0, y: -4)
+            LinearGradient(
+                colors: [
+                    AppTheme.bgPrimary.opacity(0.94),
+                    AppTheme.bgSecondary
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .shadow(color: AppTheme.shadowColor, radius: 8, x: 0, y: -4)
         )
     }
     
@@ -323,7 +388,7 @@ struct AIChatView: View {
                 }
                 .padding(.horizontal, AppTheme.Spacing.md)
                 .padding(.vertical, AppTheme.Spacing.sm)
-                .background(AppTheme.bgSecondary)
+                .background(AppTheme.bgElevated)
                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                 .overlay(
                     RoundedRectangle(cornerRadius: AppTheme.Radius.md)
@@ -337,10 +402,10 @@ struct AIChatView: View {
     private func actionColor(for type: ActionResult.ActionResultType) -> Color {
         switch type {
         case .created: return AppTheme.secondaryTeal
-        case .updated: return Color.orange
+        case .updated: return AppTheme.accentGold
         case .deleted: return AppTheme.accentCoral
-        case .completed: return Color.green
-        case .warning: return Color.orange
+        case .completed: return AppTheme.secondaryTeal
+        case .warning: return AppTheme.accentGold
         }
     }
     
@@ -358,8 +423,12 @@ struct AIChatView: View {
                     .foregroundColor(AppTheme.textSecondary)
                     .padding(.horizontal, AppTheme.Spacing.xl)
                     .padding(.vertical, AppTheme.Spacing.sm)
-                    .background(AppTheme.bgTertiary)
+                    .background(AppTheme.bgElevated)
                     .clipShape(Capsule())
+                    .overlay(
+                        Capsule()
+                            .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                    )
             }
             
             Button {
@@ -378,13 +447,13 @@ struct AIChatView: View {
                 .padding(.vertical, AppTheme.Spacing.sm)
                 .background(
                     LinearGradient(
-                        colors: [AppTheme.secondaryTeal, AppTheme.secondaryTeal.opacity(0.8)],
+                        colors: [AppTheme.primaryDeepIndigo, AppTheme.accentGold],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
                 )
                 .clipShape(Capsule())
-                .shadow(color: AppTheme.secondaryTeal.opacity(0.3), radius: 4, x: 0, y: 2)
+                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.22), radius: 8, x: 0, y: 4)
             }
         }
         .padding(.horizontal, AppTheme.Spacing.lg)
@@ -398,10 +467,16 @@ struct AIChatView: View {
     
     private var quickPromptsView: some View {
         VStack(alignment: .leading, spacing: AppTheme.Spacing.sm) {
-            Text("Quick Start")
-                .font(AppTheme.Typography.labelLarge)
-                .foregroundColor(AppTheme.textTertiary)
-                .padding(.horizontal, AppTheme.Spacing.xs)
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Quick Start")
+                    .font(AppTheme.Typography.labelLarge)
+                    .foregroundColor(AppTheme.accentGold)
+
+                Text("试试让河狸帮你安排今天，或者快速生成一个计划。")
+                    .font(AppTheme.Typography.bodySmall)
+                    .foregroundColor(AppTheme.textSecondary)
+            }
+            .padding(.horizontal, AppTheme.Spacing.xs)
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: AppTheme.Spacing.sm) {
                 ForEach(quickPrompts) { prompt in
@@ -412,9 +487,9 @@ struct AIChatView: View {
                         HStack(spacing: AppTheme.Spacing.sm) {
                             Image(systemName: prompt.icon)
                                 .font(.system(size: 13, weight: .semibold))
-                                .foregroundColor(AppTheme.secondaryTeal)
+                                .foregroundColor(AppTheme.primaryDeepIndigo)
                                 .frame(width: 24, height: 24)
-                                .background(AppTheme.secondaryTeal.opacity(0.1))
+                                .background(AppTheme.accentGold.opacity(0.12))
                                 .clipShape(Circle())
                             
                             Text(prompt.label)
@@ -425,13 +500,14 @@ struct AIChatView: View {
                         }
                         .padding(.horizontal, AppTheme.Spacing.md)
                         .padding(.vertical, AppTheme.Spacing.sm)
-                        .background(AppTheme.bgSecondary)
+                        .background(AppTheme.bgElevated)
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                         .overlay(
                             RoundedRectangle(cornerRadius: AppTheme.Radius.md)
-                                .stroke(AppTheme.borderColor, lineWidth: 1)
+                                .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
                         )
                     }
+                    .buttonStyle(.plain)
                 }
             }
         }

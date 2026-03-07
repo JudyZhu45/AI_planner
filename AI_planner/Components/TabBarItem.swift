@@ -16,17 +16,26 @@ struct TabBarItem: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: AppTheme.Spacing.xs) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(isSelected ? AppTheme.primaryDeepIndigo : AppTheme.textTertiary)
-                    .scaleEffect(isSelected ? 1.1 : 1.0)
-                
+                ZStack {
+                    Capsule()
+                        .fill(isSelected ? AppTheme.primaryDeepIndigo.opacity(0.10) : Color.clear)
+                        .frame(width: 44, height: 30)
+
+                    Image(systemName: icon)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(isSelected ? AppTheme.primaryDeepIndigo : AppTheme.textTertiary)
+                        .scaleEffect(isSelected ? 1.08 : 1.0)
+                }
+
                 Text(label)
                     .font(AppTheme.Typography.labelSmall)
                     .foregroundColor(isSelected ? AppTheme.primaryDeepIndigo : AppTheme.textTertiary)
             }
             .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .transaction { transaction in
             transaction.animation = .easeInOut(duration: 0.2)
         }

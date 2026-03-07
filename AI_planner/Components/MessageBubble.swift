@@ -68,9 +68,13 @@ struct MessageBubble: View {
                     TypingIndicatorInline()
                         .padding(.horizontal, AppTheme.Spacing.lg)
                         .padding(.vertical, AppTheme.Spacing.md)
-                        .background(AppTheme.bgSecondary)
+                        .background(AppTheme.bgElevated)
                         .clipShape(chatBubbleShape(isUser: false))
-                        .shadow(color: AppTheme.shadowColor, radius: 2, x: 0, y: 1)
+                        .overlay(
+                            chatBubbleShape(isUser: false)
+                                .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                        )
+                        .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
                 } else {
                     bubbleContent
                         .padding(.horizontal, AppTheme.Spacing.lg)
@@ -79,17 +83,24 @@ struct MessageBubble: View {
                             isUserMessage
                                 ? AnyShapeStyle(
                                     LinearGradient(
-                                        colors: [AppTheme.primaryDeepIndigo, AppTheme.primaryDeepIndigo.opacity(0.85)],
+                                        colors: [AppTheme.primaryDeepIndigo, AppTheme.accentGold],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
                                 : AnyShapeStyle(
-                                    message.isError ? AppTheme.accentCoral.opacity(0.1) : AppTheme.bgSecondary
+                                    message.isError ? AppTheme.accentCoral.opacity(0.10) : AppTheme.bgElevated
                                 )
                         )
                         .clipShape(chatBubbleShape(isUser: isUserMessage))
-                        .shadow(color: AppTheme.shadowColor, radius: 2, x: 0, y: 1)
+                        .overlay(
+                            chatBubbleShape(isUser: isUserMessage)
+                                .stroke(
+                                    isUserMessage ? Color.white.opacity(0.12) : AppTheme.borderColor.opacity(0.85),
+                                    lineWidth: 1
+                                )
+                        )
+                        .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
                         .contextMenu {
                             Button {
                                 onCopy?()
@@ -147,11 +158,17 @@ struct MessageBubble: View {
     // MARK: - AI Avatar
     
     private var aiAvatar: some View {
-        Image("beaver-main")
-            .resizable()
-            .scaledToFit()
-            .frame(width: 28, height: 28)
-            .clipShape(Circle())
+        ZStack {
+            Circle()
+                .fill(AppTheme.accentGold.opacity(0.12))
+                .frame(width: 34, height: 34)
+
+            Image("beaver-main")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 28, height: 28)
+                .clipShape(Circle())
+        }
     }
     
     // MARK: - Chat Bubble Shape
@@ -234,7 +251,7 @@ struct TypingIndicatorInline: View {
             HStack(spacing: 3) {
                 ForEach(0..<3, id: \.self) { index in
                     Circle()
-                        .fill(AppTheme.primaryDeepIndigo.opacity(0.4))
+                        .fill(AppTheme.primaryDeepIndigo.opacity(0.35))
                         .frame(width: 5, height: 5)
                         .offset(y: animating ? -3 : 0)
                         .animation(

@@ -78,21 +78,55 @@ struct ProfileView: View {
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.30)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.10),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 26,
+                    endRadius: 260
+                )
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    Text("Profile")
-                        .font(AppTheme.Typography.displayMedium)
-                        .foregroundColor(AppTheme.primaryDeepIndigo)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Profile")
+                            .font(AppTheme.Typography.displayMedium)
+                            .foregroundColor(AppTheme.primaryDeepIndigo)
+
+                        Text("Your habits, achievements, and planning rhythm at a glance.")
+                            .font(AppTheme.Typography.bodySmall)
+                            .foregroundColor(AppTheme.textSecondary)
+                    }
                     
                     Spacer()
                 }
                 .padding(AppTheme.Spacing.lg)
-                .background(AppTheme.bgSecondary)
-                .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                )
+                .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
                 
                 ScrollView {
                     VStack(spacing: AppTheme.Spacing.lg) {
@@ -140,16 +174,26 @@ struct ProfileView: View {
     private var profileCard: some View {
         VStack(spacing: AppTheme.Spacing.lg) {
             // Avatar
-            Image("beaver-main")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(AppTheme.bgSecondary, lineWidth: 3)
-                )
-                .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.15), radius: 8, x: 0, y: 4)
+            ZStack {
+                Circle()
+                    .fill(AppTheme.accentGold.opacity(0.12))
+                    .frame(width: 118, height: 118)
+
+                Circle()
+                    .stroke(AppTheme.borderColor.opacity(0.7), lineWidth: 1)
+                    .frame(width: 118, height: 118)
+
+                Image("beaver-main")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 100, height: 100)
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(AppTheme.bgSecondary, lineWidth: 3)
+                    )
+                    .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.15), radius: 8, x: 0, y: 4)
+            }
             
             VStack(spacing: AppTheme.Spacing.xs) {
                 Text(authManager.userEmail ?? "AI Planner User")
@@ -164,12 +208,13 @@ struct ProfileView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(AppTheme.Spacing.xl)
-        .background(AppTheme.bgSecondary)
+    .background(AppTheme.bgElevated)
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(AppTheme.borderColor, lineWidth: 1)
+        .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
         )
+    .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
         .padding(.horizontal, AppTheme.Spacing.lg)
     }
     
@@ -187,11 +232,15 @@ struct ProfileView: View {
                         Text("Weekly")
                             .font(AppTheme.Typography.labelSmall)
                     }
-                    .foregroundColor(AppTheme.secondaryTeal)
+                    .foregroundColor(AppTheme.primaryDeepIndigo)
                     .padding(.horizontal, AppTheme.Spacing.md)
                     .padding(.vertical, AppTheme.Spacing.xs)
-                    .background(AppTheme.secondaryTeal.opacity(0.1))
+                    .background(AppTheme.bgElevated)
                     .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
+                            .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
+                    )
                 }
             }
             .padding(.horizontal, AppTheme.Spacing.lg)
@@ -202,7 +251,7 @@ struct ProfileView: View {
                     icon: "checkmark.circle.fill",
                     value: "\(completedTasksCount)",
                     label: "Completed",
-                    color: Color.green
+                    color: AppTheme.secondaryTeal
                 )
                 
                 StatCard(
@@ -265,12 +314,13 @@ struct ProfileView: View {
                 }
             }
             .padding(AppTheme.Spacing.lg)
-            .background(AppTheme.bgSecondary)
+            .background(AppTheme.bgElevated)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                    .stroke(AppTheme.borderColor, lineWidth: 1)
+                    .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
             )
+            .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
             .padding(.horizontal, AppTheme.Spacing.lg)
         }
     }
@@ -391,12 +441,13 @@ struct ProfileView: View {
                 .padding(.horizontal, AppTheme.Spacing.lg)
                 .padding(.vertical, AppTheme.Spacing.md)
             }
-            .background(AppTheme.bgSecondary)
+            .background(AppTheme.bgElevated)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                    .stroke(AppTheme.borderColor, lineWidth: 1)
+                    .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
             )
+            .shadow(color: AppTheme.Shadows.sm.color, radius: AppTheme.Shadows.sm.radius, x: AppTheme.Shadows.sm.x, y: AppTheme.Shadows.sm.y)
             .padding(.horizontal, AppTheme.Spacing.lg)
         }
     }
