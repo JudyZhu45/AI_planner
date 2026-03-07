@@ -27,7 +27,7 @@ struct TypingIndicator: View {
                 HStack(spacing: 3) {
                     ForEach(0..<3, id: \.self) { index in
                         Circle()
-                            .fill(AppTheme.primaryDeepIndigo.opacity(0.5))
+                            .fill(AppTheme.primaryDeepIndigo.opacity(0.4))
                             .frame(width: 5, height: 5)
                             .offset(y: bouncing ? -3 : 0)
                             .animation(
@@ -41,13 +41,21 @@ struct TypingIndicator: View {
             }
             .padding(.horizontal, AppTheme.Spacing.lg)
             .padding(.vertical, AppTheme.Spacing.sm)
-            .background(AppTheme.bgTertiary)
+            .background(AppTheme.bgElevated)
+            .overlay(
+                RoundedRectangle(
+                    cornerRadius: AppTheme.Radius.xl,
+                    style: .continuous
+                )
+                .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+            )
             .clipShape(
                 RoundedRectangle(
                     cornerRadius: AppTheme.Radius.xl,
                     style: .continuous
                 )
             )
+            .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
             
             Spacer()
         }

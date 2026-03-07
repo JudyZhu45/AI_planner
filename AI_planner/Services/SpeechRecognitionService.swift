@@ -33,13 +33,13 @@ class SpeechRecognitionService: ObservableObject {
             }
         }
         guard speechStatus == .authorized else {
-            errorMessage = "语音识别权限未授权"
+            errorMessage = "Speech recognition not authorized"
             return false
         }
         
         let micGranted = await AVAudioApplication.requestRecordPermission()
         guard micGranted else {
-            errorMessage = "麦克风权限未授权"
+            errorMessage = "Microphone access not authorized"
             return false
         }
         
@@ -58,7 +58,7 @@ class SpeechRecognitionService: ObservableObject {
         recognizedText = ""
         
         guard let speechRecognizer = speechRecognizer, speechRecognizer.isAvailable else {
-            errorMessage = "语音识别不可用"
+            errorMessage = "Speech recognition unavailable"
             return
         }
         
@@ -95,7 +95,7 @@ class SpeechRecognitionService: ObservableObject {
                         let nsError = error as NSError
                         // Ignore cancellation errors (user stopped recording)
                         if nsError.domain != "kAFAssistantErrorDomain" || nsError.code != 216 {
-                            self.errorMessage = "识别错误: \(error.localizedDescription)"
+                            self.errorMessage = "Recognition error: \(error.localizedDescription)"
                         }
                         self.stopRecording()
                     }
@@ -107,7 +107,7 @@ class SpeechRecognitionService: ObservableObject {
             }
             
         } catch {
-            errorMessage = "录音启动失败: \(error.localizedDescription)"
+            errorMessage = "Failed to start recording: \(error.localizedDescription)"
             isRecording = false
         }
     }

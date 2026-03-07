@@ -18,12 +18,27 @@ struct FilterButton: View {
                 .font(AppTheme.Typography.labelLarge)
                 .foregroundColor(isSelected ? AppTheme.textInverse : AppTheme.textSecondary)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 6)
+                .padding(.vertical, 8)
                 .background(
                     RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
-                        .fill(isSelected ? AppTheme.primaryDeepIndigo : AppTheme.bgTertiary)
+                        .fill(
+                            isSelected
+                                ? AnyShapeStyle(
+                                    LinearGradient(
+                                        colors: [AppTheme.primaryDeepIndigo, AppTheme.accentGold],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                                : AnyShapeStyle(AppTheme.bgElevated)
+                        )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
+                        .stroke(isSelected ? Color.white.opacity(0.12) : AppTheme.borderColor.opacity(0.9), lineWidth: 1)
                 )
         }
+        .buttonStyle(.plain)
     }
 }
 

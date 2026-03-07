@@ -65,7 +65,15 @@ struct AddEventSheet: View {
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.28)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -75,6 +83,14 @@ struct AddEventSheet: View {
                         Text("Cancel")
                             .font(AppTheme.Typography.titleSmall)
                             .foregroundColor(AppTheme.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 8)
+                            .background(AppTheme.bgElevated)
+                            .clipShape(Capsule())
+                            .overlay(
+                                Capsule()
+                                    .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                            )
                     }
                     
                     Spacer()
@@ -98,14 +114,33 @@ struct AddEventSheet: View {
                         .foregroundColor(AppTheme.textInverse)
                         .padding(.horizontal, AppTheme.Spacing.lg)
                         .padding(.vertical, AppTheme.Spacing.sm)
-                        .background(isTitleEmpty ? AppTheme.primaryDeepIndigo.opacity(0.4) : AppTheme.primaryDeepIndigo)
+                        .background(
+                            isTitleEmpty
+                                ? AnyShapeStyle(AppTheme.primaryDeepIndigo.opacity(0.4))
+                                : AnyShapeStyle(
+                                    LinearGradient(
+                                        colors: [AppTheme.primaryDeepIndigo, AppTheme.accentGold],
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
+                                )
+                        )
                         .clipShape(Capsule())
                     }
                 }
                 .padding(.horizontal, AppTheme.Spacing.lg)
                 .padding(.vertical, AppTheme.Spacing.lg)
-                .background(AppTheme.bgSecondary)
-                .shadow(color: AppTheme.shadowColor, radius: 4, x: 0, y: 2)
+                .background(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.96))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.82), lineWidth: 1)
+                )
+                .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+                .padding(.horizontal, AppTheme.Spacing.lg)
+                .padding(.top, AppTheme.Spacing.md)
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: AppTheme.Spacing.lg) {
@@ -119,7 +154,7 @@ struct AddEventSheet: View {
                                 .font(AppTheme.Typography.bodyLarge)
                                 .foregroundColor(AppTheme.textPrimary)
                                 .padding(AppTheme.Spacing.md)
-                                .background(AppTheme.bgSecondary)
+                                .background(AppTheme.bgElevated)
                                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: AppTheme.Radius.md)
@@ -162,7 +197,17 @@ struct AddEventSheet: View {
                                             .foregroundColor(selectedEventType == type ? AppTheme.textInverse : AppTheme.textSecondary)
                                             .padding(.vertical, AppTheme.Spacing.md)
                                             .padding(.horizontal, AppTheme.Spacing.lg)
-                                            .background(selectedEventType == type ? eventColor.primary : AppTheme.bgSecondary)
+                                            .background(
+                                                selectedEventType == type
+                                                    ? AnyShapeStyle(
+                                                        LinearGradient(
+                                                            colors: [eventColor.primary, AppTheme.accentGold.opacity(0.95)],
+                                                            startPoint: .topLeading,
+                                                            endPoint: .bottomTrailing
+                                                        )
+                                                    )
+                                                    : AnyShapeStyle(AppTheme.bgElevated)
+                                            )
                                             .clipShape(Capsule())
                                             .overlay(
                                                 Capsule()
@@ -208,7 +253,7 @@ struct AddEventSheet: View {
                                             CircularConfidenceView(confidence: rec.confidence)
                                         }
                                         .padding(AppTheme.Spacing.md)
-                                        .background(AppTheme.secondaryTeal.opacity(0.06))
+                                        .background(AppTheme.bgElevated)
                                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.sm))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: AppTheme.Radius.sm)
@@ -239,7 +284,7 @@ struct AddEventSheet: View {
                                 .foregroundColor(AppTheme.textPrimary)
                             }
                             .padding(AppTheme.Spacing.md)
-                            .background(AppTheme.bgSecondary)
+                            .background(AppTheme.bgElevated)
                             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.md)
@@ -267,7 +312,7 @@ struct AddEventSheet: View {
                                 .foregroundColor(AppTheme.textPrimary)
                             }
                             .padding(AppTheme.Spacing.md)
-                            .background(AppTheme.bgSecondary)
+                            .background(AppTheme.bgElevated)
                             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.md)
@@ -295,7 +340,7 @@ struct AddEventSheet: View {
                                 .foregroundColor(AppTheme.textPrimary)
                             }
                             .padding(AppTheme.Spacing.md)
-                            .background(AppTheme.bgSecondary)
+                            .background(AppTheme.bgElevated)
                             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppTheme.Radius.md)
@@ -337,7 +382,7 @@ struct AddEventSheet: View {
                                 .foregroundColor(AppTheme.textPrimary)
                                 .frame(height: 100)
                                 .padding(AppTheme.Spacing.sm)
-                                .background(AppTheme.bgSecondary)
+                                .background(AppTheme.bgElevated)
                                 .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: AppTheme.Radius.md)

@@ -50,10 +50,23 @@ struct TodoChecklistItem: View {
         .padding(AppTheme.Spacing.lg)
         .background(
             ZStack {
-                AppTheme.bgSecondary
+                RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                    .fill(AppTheme.bgElevated)
+
+                RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [
+                                AppTheme.bgSecondary,
+                                AppTheme.bgElevated
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
                 
                 GeometryReader { geo in
-                    Rectangle()
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
                         .fill(AppTheme.secondaryTeal.opacity(0.08))
                         .frame(width: geo.size.width * completionProgress)
                 }
@@ -63,8 +76,9 @@ struct TodoChecklistItem: View {
         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.lg))
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .stroke(AppTheme.borderColor, lineWidth: 1)
+                .stroke(AppTheme.borderColor.opacity(0.9), lineWidth: 1)
         )
+        .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
         .onAppear {
             completionProgress = task.isCompleted ? 1.0 : 0.0
         }

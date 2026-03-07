@@ -12,9 +12,6 @@ struct CustomTabBar: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Divider()
-                .foregroundColor(AppTheme.dividerColor)
-            
             HStack(spacing: 0) {
                 TabBarItem(
                     icon: "clock.fill",
@@ -67,10 +64,24 @@ struct CustomTabBar: View {
                 )
             }
             .padding(.horizontal, AppTheme.Spacing.lg)
-            .padding(.vertical, AppTheme.Spacing.md)
-            .background(AppTheme.bgSecondary)
-            .shadow(color: AppTheme.shadowColor, radius: 8, x: 0, y: -4)
+            .padding(.top, AppTheme.Spacing.md)
+            .padding(.bottom, AppTheme.Spacing.lg)
+            .background(
+                ZStack {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(AppTheme.bgElevated.opacity(0.92))
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                    RoundedRectangle(cornerRadius: 28, style: .continuous)
+                        .stroke(AppTheme.borderColor.opacity(0.9), lineWidth: 1)
+                }
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
+            .padding(.horizontal, AppTheme.Spacing.lg)
+            .padding(.bottom, AppTheme.Spacing.sm)
         }
+        .background(Color.clear)
     }
 }
 

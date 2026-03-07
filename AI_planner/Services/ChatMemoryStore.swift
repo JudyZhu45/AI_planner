@@ -29,11 +29,11 @@ struct UserPreference: Codable, Identifiable {
 }
 
 enum PreferenceCategory: String, Codable {
-    case schedule       // 时间偏好: "不喜欢早起", "喜欢下午运动"
-    case taskHabit      // 任务习惯: "学习喜欢分段", "健身固定周三周五"
-    case lifestyle      // 生活方式: "周末不安排工作", "午休1小时"
-    case personality    // 个性化: "喜欢简洁的回复", "不要用太多emoji"
-    case constraint     // 约束: "周二周四有课", "每天9点上班"
+    case schedule       // Schedule preferences: "doesn't like waking early", "prefers afternoon exercise"
+    case taskHabit      // Task habits: "likes segmented study", "gym on Wed/Fri"
+    case lifestyle      // Lifestyle: "no work on weekends", "1-hour lunch break"
+    case personality    // Personality: "prefers concise replies", "don't use too many emojis"
+    case constraint     // Constraints: "has class Tue/Thu", "work starts at 9 AM"
 }
 
 // MARK: - Structured Preferences (from onboarding / manual editing)
@@ -118,50 +118,50 @@ class ChatMemoryStore {
         formatter.dateFormat = "HH:mm"
         
         if let wake = sp.wakeUpTime {
-            structuredLines.append("- [时间偏好] 起床时间：\(formatter.string(from: wake))")
+            structuredLines.append("- [Schedule] Wake-up time: \(formatter.string(from: wake))")
         }
         if let start = sp.workStartTime, let end = sp.workEndTime {
-            structuredLines.append("- [固定约束] 工作/上课时间：\(formatter.string(from: start))-\(formatter.string(from: end))")
+            structuredLines.append("- [Constraint] Work/class hours: \(formatter.string(from: start))-\(formatter.string(from: end))")
         }
         if sp.hasLunchBreak {
-            structuredLines.append("- [时间偏好] 用户有午休习惯")
+            structuredLines.append("- [Schedule] User takes a lunch break")
         }
         if !sp.preferredEventTypes.isEmpty {
-            structuredLines.append("- [任务习惯] 常做的任务类型：\(sp.preferredEventTypes.joined(separator: "、"))")
+            structuredLines.append("- [Task Habit] Frequently scheduled types: \(sp.preferredEventTypes.joined(separator: ", "))")
         }
         if let duration = sp.preferredDuration {
             let durationText: String
             switch duration {
-            case "short": durationText = "短时任务（30分钟以内）"
-            case "medium": durationText = "中等时长（30-60分钟）"
-            case "long": durationText = "长时任务（1小时以上）"
+            case "short": durationText = "Short tasks (under 30 min)"
+            case "medium": durationText = "Medium tasks (30–60 min)"
+            case "long": durationText = "Long tasks (over 1 hour)"
             default: durationText = duration
             }
-            structuredLines.append("- [任务习惯] 偏好任务时长：\(durationText)")
+            structuredLines.append("- [Task Habit] Preferred task duration: \(durationText)")
         }
         if let weekend = sp.weekendPreference {
             let weekendText: String
             switch weekend {
-            case "rest": weekendText = "周末以休息为主，不安排工作"
-            case "work": weekendText = "周末也会安排工作/学习"
-            case "flexible": weekendText = "周末灵活安排"
+            case "rest": weekendText = "Weekends are for rest — no work scheduled"
+            case "work": weekendText = "Weekends include work/study"
+            case "flexible": weekendText = "Weekends are flexible"
             default: weekendText = weekend
             }
-            structuredLines.append("- [生活方式] \(weekendText)")
+            structuredLines.append("- [Lifestyle] \(weekendText)")
         }
         if let constraints = sp.constraints, !constraints.isEmpty {
-            structuredLines.append("- [固定约束] \(constraints)")
+            structuredLines.append("- [Constraint] \(constraints)")
         }
         
         if !structuredLines.isEmpty {
-            lines.append("用户自定义偏好设置：")
+            lines.append("User Preferences:")
             lines.append(contentsOf: structuredLines)
         }
         
         // 2. Chat-extracted preferences
         if !preferences.isEmpty {
             if !lines.isEmpty { lines.append("") }
-            lines.append("用户偏好记忆（从历史对话中提取）：")
+            lines.append("User Preference Memory (extracted from chat history):")
             
             let grouped = Dictionary(grouping: preferences, by: \.category)
             let categoryOrder: [PreferenceCategory] = [.constraint, .schedule, .taskHabit, .lifestyle, .personality]
@@ -171,7 +171,7 @@ class ChatMemoryStore {
                 let label = categoryLabel(category)
                 let sorted = prefs.sorted { $0.confirmedCount > $1.confirmedCount }
                 for pref in sorted.prefix(3) {
-                    let reinforced = pref.confirmedCount > 1 ? "（多次提及）" : ""
+                    let reinforced = pref.confirmedCount > 1 ? " (mentioned multiple times)" : ""
                     lines.append("- [\(label)] \(pref.content)\(reinforced)")
                 }
             }
@@ -188,12 +188,12 @@ class ChatMemoryStore {
         
         // Schedule preferences
         let schedulePatterns: [(pattern: String, extractor: (String) -> String?)] = [
-            ("不喜欢早起", { _ in "用户不喜欢早起，避免安排早上8点前的任务" }),
-            ("不要.*早上", { _ in "用户不想在早上安排任务" }),
-            ("喜欢.*早起", { _ in "用户喜欢早起，可以安排早间任务" }),
-            ("晚上.*不要", { _ in "用户晚上不想被安排任务" }),
-            ("午休", { _ in "用户有午休习惯，中午12-14点不安排任务" }),
-            ("午睡", { _ in "用户有午睡习惯，中午不安排任务" }),
+            ("不喜欢早起", { _ in "User doesn't like waking up early — avoid scheduling tasks before 8 AM" }),
+            ("不要.*早上", { _ in "User doesn't want tasks scheduled in the morning" }),
+            ("喜欢.*早起", { _ in "User likes waking up early — morning tasks are OK" }),
+            ("晚上.*不要", { _ in "User doesn't want tasks scheduled in the evening" }),
+            ("午休", { _ in "User takes a lunch break — don't schedule tasks 12–2 PM" }),
+            ("午睡", { _ in "User takes afternoon naps — don't schedule midday tasks" }),
         ]
         
         for (pattern, extractor) in schedulePatterns {
@@ -204,10 +204,10 @@ class ChatMemoryStore {
         
         // Constraint patterns
         let constraintPatterns: [(pattern: String, extractor: (String) -> String?)] = [
-            ("周[一二三四五六日].*有课", { msg in extractConstraint(msg, prefix: "用户") }),
-            ("每天.*点.*[上下]班", { msg in extractConstraint(msg, prefix: "用户") }),
+            ("周[一二三四五六日].*有课", { msg in extractConstraint(msg, prefix: "User") }),
+            ("每天.*点.*[上下]班", { msg in extractConstraint(msg, prefix: "User") }),
             ("每周[一二三四五六日]", { msg in extractWeeklyPattern(msg) }),
-            ("固定.*时间", { msg in extractConstraint(msg, prefix: "用户有固定安排：") }),
+            ("固定.*时间", { msg in extractConstraint(msg, prefix: "User has a fixed schedule: ") }),
         ]
         
         for (pattern, extractor) in constraintPatterns {
@@ -218,10 +218,10 @@ class ChatMemoryStore {
         
         // Task habit patterns
         let habitPatterns: [(pattern: String, extractor: (String) -> String?)] = [
-            ("学习.*分[段钟]", { _ in "用户学习时喜欢分段进行" }),
-            ("喜欢.*[一1]个小时", { _ in "用户偏好1小时的任务时长" }),
-            ("不要.*太长", { _ in "用户不喜欢安排太长时间的单个任务" }),
-            ("番茄", { _ in "用户使用番茄工作法，建议25分钟学习+5分钟休息" }),
+            ("学习.*分[段钟]", { _ in "User prefers studying in shorter segments" }),
+            ("喜欢.*[一1]个小时", { _ in "User prefers 1-hour task durations" }),
+            ("不要.*太长", { _ in "User doesn't like long individual tasks" }),
+            ("番茄", { _ in "User uses the Pomodoro technique — 25 min work + 5 min break" }),
         ]
         
         for (pattern, extractor) in habitPatterns {
@@ -232,9 +232,9 @@ class ChatMemoryStore {
         
         // Lifestyle patterns
         let lifestylePatterns: [(pattern: String, extractor: (String) -> String?)] = [
-            ("周末.*不.*[工作学习上班]", { _ in "用户周末不想安排工作/学习" }),
-            ("周末.*休息", { _ in "用户周末以休息为主" }),
-            ("周末.*[运动健身]", { _ in "用户周末喜欢运动/健身" }),
+            ("周末.*不.*[工作学习上班]", { _ in "User doesn't want work/study scheduled on weekends" }),
+            ("周末.*休息", { _ in "User prefers to rest on weekends" }),
+            ("周末.*[运动健身]", { _ in "User likes to exercise/work out on weekends" }),
         ]
         
         for (pattern, extractor) in lifestylePatterns {
@@ -300,11 +300,11 @@ class ChatMemoryStore {
     
     private func categoryLabel(_ category: PreferenceCategory) -> String {
         switch category {
-        case .schedule: return "时间偏好"
-        case .taskHabit: return "任务习惯"
-        case .lifestyle: return "生活方式"
-        case .personality: return "个性化"
-        case .constraint: return "固定约束"
+        case .schedule: return "Schedule"
+        case .taskHabit: return "Task Habit"
+        case .lifestyle: return "Lifestyle"
+        case .personality: return "Personality"
+        case .constraint: return "Constraint"
         }
     }
     
@@ -337,5 +337,5 @@ private func extractConstraint(_ message: String, prefix: String) -> String? {
 private func extractWeeklyPattern(_ message: String) -> String? {
     let trimmed = message.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !trimmed.isEmpty else { return nil }
-    return "用户的周计划习惯：\(trimmed.count > 50 ? String(trimmed.prefix(50)) + "..." : trimmed)"
+    return "User's weekly schedule habit: \(trimmed.count > 50 ? String(trimmed.prefix(50)) + "..." : trimmed)"
 }

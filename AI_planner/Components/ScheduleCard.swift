@@ -36,16 +36,17 @@ struct ScheduleCard: View {
             HStack(spacing: AppTheme.Spacing.md) {
                 // Icon Badge
                 ZStack {
+                    Circle()
+                        .fill(task.isCompleted ? AppTheme.bgTertiary : eventColor.primary.opacity(0.14))
+                        .frame(width: 42, height: 42)
+
                     Image(systemName: eventColor.icon)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(AppTheme.textInverse)
-                        .frame(width: 36, height: 36)
-                        .background(task.isCompleted ? AppTheme.textTertiary : eventColor.primary)
-                        .clipShape(Circle())
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(task.isCompleted ? AppTheme.textSecondary : eventColor.primary)
                     
                     if task.isCompleted {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.system(size: 17, weight: .bold))
                             .foregroundColor(AppTheme.secondaryTeal)
                             .background(Circle().fill(AppTheme.bgSecondary).frame(width: 16, height: 16))
                             .offset(x: 14, y: -14)
@@ -76,12 +77,29 @@ struct ScheduleCard: View {
                     Text(durationString)
                         .font(AppTheme.Typography.labelSmall)
                         .foregroundColor(AppTheme.textTertiary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(AppTheme.bgSecondary.opacity(0.9))
+                        .clipShape(Capsule())
                 }
             }
             .padding(AppTheme.Spacing.lg)
             .background(
                 ZStack {
-                    (task.isCompleted ? eventColor.light.opacity(0.5) : eventColor.light)
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                        .fill(task.isCompleted ? AppTheme.bgSecondary.opacity(0.78) : AppTheme.bgElevated)
+
+                    RoundedRectangle(cornerRadius: AppTheme.Radius.lg, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    eventColor.light.opacity(task.isCompleted ? 0.35 : 0.72),
+                                    AppTheme.bgElevated
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
                     
                     // Completion fill overlay
                     GeometryReader { geo in
@@ -101,14 +119,13 @@ struct ScheduleCard: View {
                     .clipped()
                 }
             )
-            .cornerRadius(AppTheme.Radius.lg)
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                    .stroke(eventColor.primary.opacity(task.isCompleted ? 0.15 : 0.3), lineWidth: 1)
+                    .stroke(task.isCompleted ? AppTheme.borderColor.opacity(0.85) : eventColor.primary.opacity(0.22), lineWidth: 1)
             )
         }
         .scaleEffect(isHovered ? 1.02 : 1.0)
-        .shadow(color: eventColor.primary.opacity(isHovered ? 0.2 : 0.08), radius: isHovered ? 12 : 8)
+        .shadow(color: AppTheme.Shadows.sm.color.opacity(isHovered ? 1 : 0.9), radius: isHovered ? 14 : 10, x: 0, y: isHovered ? 8 : 6)
         .onHover { hovering in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isHovered = hovering

@@ -54,8 +54,8 @@ struct ToastView: View {
         .padding(.vertical, AppTheme.Spacing.md)
         .background(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
-                .fill(AppTheme.bgSecondary)
-                .shadow(color: AppTheme.shadowColor.opacity(0.3), radius: 12, x: 0, y: 4)
+                .fill(AppTheme.bgElevated.opacity(0.98))
+                .shadow(color: AppTheme.Shadows.md.color, radius: AppTheme.Shadows.md.radius, x: AppTheme.Shadows.md.x, y: AppTheme.Shadows.md.y)
         )
         .overlay(
             RoundedRectangle(cornerRadius: AppTheme.Radius.lg)
@@ -78,6 +78,7 @@ struct ToastOverlay: View {
                 })
                 .transition(.move(edge: .top).combined(with: .opacity))
                 .zIndex(999)
+                .padding(.top, 8)
             }
             
             Spacer()

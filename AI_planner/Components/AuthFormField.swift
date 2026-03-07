@@ -28,7 +28,7 @@ struct AuthFormField: View {
             HStack(spacing: AppTheme.Spacing.md) {
                 Image(systemName: icon)
                     .font(.system(size: 14))
-                    .foregroundColor(AppTheme.textTertiary)
+                    .foregroundColor(showError ? AppTheme.accentCoral : AppTheme.textTertiary)
                 
                 if isSecure {
                     SecureField(placeholder, text: $text)
@@ -43,12 +43,13 @@ struct AuthFormField: View {
                 }
             }
             .padding(AppTheme.Spacing.lg)
-            .background(AppTheme.bgSecondary)
+            .background(AppTheme.bgElevated)
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
             .overlay(
                 RoundedRectangle(cornerRadius: AppTheme.Radius.md)
                     .stroke(showError ? AppTheme.accentCoral : AppTheme.borderColor, lineWidth: 1)
             )
+            .shadow(color: AppTheme.Shadows.xs.color, radius: AppTheme.Shadows.xs.radius, x: AppTheme.Shadows.xs.x, y: AppTheme.Shadows.xs.y)
             
             if showError, let errorMessage {
                 Text(errorMessage)

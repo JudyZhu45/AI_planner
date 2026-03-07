@@ -12,6 +12,7 @@ struct AuthPrimaryButton: View {
     var isLoading: Bool = false
     var isDisabled: Bool = false
     let action: () -> Void
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
@@ -32,15 +33,35 @@ struct AuthPrimaryButton: View {
                 LinearGradient(
                     gradient: Gradient(colors: [
                         AppTheme.primaryDeepIndigo,
-                        AppTheme.primaryDeepIndigo.opacity(0.85)
+                        AppTheme.accentGold
                     ]),
-                    startPoint: .leading,
-                    endPoint: .trailing
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 )
             )
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.md))
-            .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.3), radius: 8, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppTheme.Radius.md)
+                    .stroke(Color.white.opacity(0.14), lineWidth: 1)
+            )
+            .shadow(color: AppTheme.primaryDeepIndigo.opacity(0.22), radius: 10, x: 0, y: 5)
+            .scaleEffect(isPressed ? 0.98 : 1.0)
         }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    guard !isDisabled && !isLoading else { return }
+                    withAnimation(.easeOut(duration: 0.12)) {
+                        isPressed = true
+                    }
+                }
+                .onEnded { _ in
+                    withAnimation(.spring(response: 0.25, dampingFraction: 0.7)) {
+                        isPressed = false
+                    }
+                }
+        )
         .disabled(isDisabled || isLoading)
         .opacity(isDisabled ? 0.6 : 1)
     }

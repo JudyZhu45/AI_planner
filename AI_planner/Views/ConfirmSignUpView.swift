@@ -18,7 +18,26 @@ struct ConfirmSignUpView: View {
     
     var body: some View {
         ZStack {
-            AppTheme.bgPrimary
+            LinearGradient(
+                colors: [
+                    AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
+                    AppTheme.bgTertiary.opacity(0.28)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.10),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 10,
+                    endRadius: 260
+                )
+            )
                 .ignoresSafeArea()
             
             ScrollView {
@@ -27,10 +46,20 @@ struct ConfirmSignUpView: View {
                     
                     // Header
                     VStack(spacing: AppTheme.Spacing.lg) {
-                        Image("beaver-main")
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: 100, height: 100)
+                        ZStack {
+                            Circle()
+                                .fill(AppTheme.accentGold.opacity(0.12))
+                                .frame(width: 124, height: 124)
+
+                            Circle()
+                                .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                                .frame(width: 124, height: 124)
+
+                            Image("beaver-main")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        }
                         
                         VStack(spacing: AppTheme.Spacing.sm) {
                             Text("Verify Your Email")
@@ -86,9 +115,13 @@ struct ConfirmSignUpView: View {
                             }
                         }
                         .padding(AppTheme.Spacing.xxl)
-                        .background(AppTheme.bgSecondary)
+                        .background(AppTheme.bgElevated)
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
-                        .shadow(color: AppTheme.shadowColor, radius: 16, x: 0, y: 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.xl)
+                                .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
+                        )
+                        .shadow(color: AppTheme.Shadows.lg.color, radius: AppTheme.Shadows.lg.radius, x: AppTheme.Shadows.lg.x, y: AppTheme.Shadows.lg.y)
                         .padding(.horizontal, AppTheme.Spacing.lg)
                     } else {
                         // Code input
@@ -142,9 +175,13 @@ struct ConfirmSignUpView: View {
                             .disabled(resendCooldown > 0)
                         }
                         .padding(AppTheme.Spacing.xxl)
-                        .background(AppTheme.bgSecondary)
+                        .background(AppTheme.bgElevated)
                         .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.xl))
-                        .shadow(color: AppTheme.shadowColor, radius: 16, x: 0, y: 8)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppTheme.Radius.xl)
+                                .stroke(AppTheme.borderColor.opacity(0.85), lineWidth: 1)
+                        )
+                        .shadow(color: AppTheme.Shadows.lg.color, radius: AppTheme.Shadows.lg.radius, x: AppTheme.Shadows.lg.x, y: AppTheme.Shadows.lg.y)
                         .padding(.horizontal, AppTheme.Spacing.lg)
                     }
                     

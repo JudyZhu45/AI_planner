@@ -14,10 +14,10 @@ struct LoadingScreen: View {
     @State private var sparkleRotation: Double = 0
     
     let loadingTexts = [
-        "正在唤醒海狸...",
-        "整理你的时间...",
-        "准备智能建议...",
-        "即将就绪..."
+        "Waking up the beaver...",
+        "Organizing your schedule...",
+        "Preparing smart suggestions...",
+        "Almost ready..."
     ]
     
     let onComplete: () -> Void
@@ -28,12 +28,23 @@ struct LoadingScreen: View {
             // Background gradient
             LinearGradient(
                 colors: [
-                    AppTheme.bgPrimary,
                     AppTheme.bgSecondary,
+                    AppTheme.bgPrimary,
                     AppTheme.bgTertiary
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
+            )
+            .overlay(
+                RadialGradient(
+                    colors: [
+                        AppTheme.accentGold.opacity(0.14),
+                        Color.clear
+                    ],
+                    center: .top,
+                    startRadius: 20,
+                    endRadius: 240
+                )
             )
             .ignoresSafeArea()
             
@@ -44,14 +55,24 @@ struct LoadingScreen: View {
                 ZStack {
                     // Glow effect
                     Circle()
-                        .fill(AppTheme.primaryDeepIndigo.opacity(0.15))
-                        .frame(width: 140, height: 140)
-                        .blur(radius: 20)
+                        .fill(AppTheme.accentGold.opacity(0.18))
+                        .frame(width: 150, height: 150)
+                        .blur(radius: 24)
                         .scaleEffect(1 + sin(progress * .pi) * 0.2)
+
+                    Circle()
+                        .fill(AppTheme.bgElevated.opacity(0.92))
+                        .frame(width: 128, height: 128)
+
+                    Circle()
+                        .stroke(AppTheme.borderColor.opacity(0.8), lineWidth: 1)
+                        .frame(width: 128, height: 128)
                     
                     // Beaver emoji with bounce
-                    Text("🦫")
-                        .font(.system(size: 72))
+                    Image("beaver-loading")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 82, height: 82)
                         .offset(y: beaverOffset)
                         .rotationEffect(.degrees(sin(Double(beaverOffset) * 0.5) * 5))
                     
@@ -78,7 +99,7 @@ struct LoadingScreen: View {
                     .foregroundColor(AppTheme.primaryDeepIndigo)
                 
                 // Tagline
-                Text("懂你的时间管家")
+                Text("Your smart schedule buddy")
                     .font(.subheadline)
                     .foregroundColor(AppTheme.textSecondary)
                 
@@ -101,7 +122,7 @@ struct LoadingScreen: View {
                         ZStack(alignment: .leading) {
                             // Background
                             RoundedRectangle(cornerRadius: 4)
-                                .fill(AppTheme.borderColor)
+                                .fill(AppTheme.borderColor.opacity(0.65))
                                 .frame(height: 8)
                             
                             // Fill with gradient
@@ -109,8 +130,8 @@ struct LoadingScreen: View {
                                 .fill(
                                     LinearGradient(
                                         colors: [
-                                            Color(red: 0.831, green: 0.647, blue: 0.455),
-                                            Color(red: 0.769, green: 0.584, blue: 0.416),
+                                            AppTheme.accentGold,
+                                            AppTheme.secondaryTeal,
                                             AppTheme.primaryDeepIndigo
                                         ],
                                         startPoint: .leading,
@@ -132,7 +153,7 @@ struct LoadingScreen: View {
                 Spacer()
                 
                 // Footer quote
-                Text("\"勤劳的海狸，聪明地建造\"")
+                Text("\"Busy beavers build smart\"")
                     .font(.caption)
                     .italic()
                     .foregroundColor(AppTheme.textTertiary)

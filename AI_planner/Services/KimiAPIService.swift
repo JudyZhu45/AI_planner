@@ -53,17 +53,17 @@ enum KimiAPIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .missingAPIKey:
-            return "API Key 未配置。请在 Secrets.xcconfig 中设置 MOONSHOT_API_KEY。"
+            return "API Key not configured. Please set MOONSHOT_API_KEY in Secrets.xcconfig."
         case .invalidURL:
-            return "无效的 API 地址。"
+            return "Invalid API URL."
         case .httpError(let code, let body):
-            if code == 401 { return "API Key 无效，请检查配置。" }
-            if code == 429 { return "请求过于频繁，请稍后再试。" }
-            return "服务器错误 (\(code)): \(body)"
+            if code == 401 { return "Invalid API Key. Please check your configuration." }
+            if code == 429 { return "Too many requests. Please try again later." }
+            return "Server error (\(code)): \(body)"
         case .decodingError(let error):
-            return "响应解析失败: \(error.localizedDescription)"
+            return "Failed to parse response: \(error.localizedDescription)"
         case .networkError(let error):
-            return "网络错误: \(error.localizedDescription)"
+            return "Network error: \(error.localizedDescription)"
         }
     }
 }
