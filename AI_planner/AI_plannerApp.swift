@@ -6,17 +6,11 @@
 //
 
 import SwiftUI
-import Amplify
-import AWSCognitoAuthPlugin
 
 @main
 struct AI_plannerApp: App {
     @State private var authManager = AuthManager()
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    
-    init() {
-        configureAmplify()
-    }
     
     var body: some Scene {
         WindowGroup {
@@ -54,15 +48,6 @@ struct AI_plannerApp: App {
                 _ = await NotificationManager.shared.requestAuthorization()
                 UserBehaviorStore.shared.recordAppOpened()
             }
-        }
-    }
-    
-    private func configureAmplify() {
-        do {
-            try Amplify.add(plugin: AWSCognitoAuthPlugin())
-            try Amplify.configure()
-        } catch {
-            print("Failed to configure Amplify: \(error)")
         }
     }
 }

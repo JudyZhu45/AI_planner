@@ -65,6 +65,8 @@ Carthage/Build/
 
 # AWS/Amplify
 AmplifyConfig/aws-exports.js
+AmplifyConfig/amplifyconfiguration.json
+AmplifyConfig/awsconfiguration.json
 amplifyconfiguration.json
 awsconfiguration.json
 
