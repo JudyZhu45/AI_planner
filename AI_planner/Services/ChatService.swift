@@ -75,6 +75,7 @@ class ChatService: ObservableObject {
     @Published var streamingText = ""
     @Published var lastError: String?
     @Published var executedActions: [ActionResult] = []
+    @Published var fallbackAssistantReply: String?
     
     private let api = KimiAPIService.shared
     private var conversationHistory: [KimiMessage] = []
@@ -108,7 +109,7 @@ class ChatService: ObservableObject {
         let weekday = weekdayFormatter.string(from: Date())
         
         let tasksContext = buildSmartContext(userMessage: userMessage)
-        let conflictContext = buildConflictContext()
+    let conflictContext = buildConflictContext()
         let userProfileSummary = BehaviorAnalyzer.shared.generateProfileSummary(days: 30)
         let beaverPersona = BeaverPersonality.shared.personaPrompt(tasks: todoViewModel?.todos ?? [])
         let chatMemory = ChatMemoryStore.shared.generateMemorySummary()
@@ -216,7 +217,8 @@ class ChatService: ObservableObject {
         - "tomorrow" = the day after today \(today)
         - "next week" = starting from next Monday
         - When planning schedules, leave reasonable breaks/commute time between tasks
-        - Check existing tasks to avoid time conflicts
+        - Use the app-provided conflict data below as the source of truth for existing overlaps
+        - Check existing tasks to avoid creating additional time conflicts
         - If the user's request is unclear, ask for details before planning
         - Reference the user profile's peak hours and habits; prioritize important tasks during peak hours
         - If the user profile shows procrastination tendencies for certain task types, give gentle reminders
@@ -225,86 +227,144 @@ class ChatService: ObservableObject {
         """
     }
     
-    // MARK: - Smart Context (Token-efficient)
+    // MARK: - Smart Context (Dynamic prompt injection layer)
     
     private func buildSmartContext(userMessage: String) -> String {
-        guard let vm = todoViewModel else { return "No tasks loaded." }
-        if vm.todos.isEmpty { return "No tasks currently scheduled." }
+        guard let vm = todoViewModel else { return "Task context unavailable. Local task store has not been connected yet." }
+        if vm.todos.isEmpty { return "No tasks currently scheduled in local storage." }
         
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today) ?? today
+        let next7DaysEnd = calendar.date(byAdding: .day, value: 7, to: today) ?? today
+        
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
         let timeFormatter = DateFormatter()
         timeFormatter.dateFormat = "HH:mm"
         
-        let sorted = vm.todos.sorted(by: { $0.dueDate < $1.dueDate })
+        let sorted = vm.todos.sorted {
+            if $0.dueDate == $1.dueDate {
+                return ($0.startTime ?? $0.dueDate) < ($1.startTime ?? $1.dueDate)
+            }
+            return $0.dueDate < $1.dueDate
+        }
         
-        // 1. Today's tasks — always include in full
         let todayTasks = sorted.filter { calendar.isDate($0.dueDate, inSameDayAs: today) }
+        let tomorrowTasks = sorted.filter { calendar.isDate($0.dueDate, inSameDayAs: tomorrow) }
         
-        // 2. Tasks on dates mentioned in user message
         let mentionedDates = extractDatesFromMessage(userMessage)
         let mentionedDateTasks = sorted.filter { task in
             mentionedDates.contains(where: { calendar.isDate(task.dueDate, inSameDayAs: $0) })
                 && !calendar.isDate(task.dueDate, inSameDayAs: today)
+                && !calendar.isDate(task.dueDate, inSameDayAs: tomorrow)
         }
         
-        // 3. Recently discussed tasks (from conversation history)
         let recentIDs = extractRecentlyMentionedTaskIDs(limit: 3)
         let recentTasks = sorted.filter { task in
             recentIDs.contains(task.id)
                 && !calendar.isDate(task.dueDate, inSameDayAs: today)
+                && !calendar.isDate(task.dueDate, inSameDayAs: tomorrow)
                 && !mentionedDates.contains(where: { d in calendar.isDate(task.dueDate, inSameDayAs: d) })
         }
         
-        // 4. Everything else — summary only
-        let includedIDs = Set(todayTasks.map(\.id))
-            .union(mentionedDateTasks.map(\.id))
-            .union(recentTasks.map(\.id))
+        let includedIDs = Set(todayTasks.map { $0.id })
+            .union(tomorrowTasks.map { $0.id })
+            .union(mentionedDateTasks.map { $0.id })
+            .union(recentTasks.map { $0.id })
         let otherTasks = sorted.filter { !includedIDs.contains($0.id) }
-        let otherIncomplete = otherTasks.filter { !$0.isCompleted }
-        let overdueCount = otherTasks.filter { $0.dueDate < today && !$0.isCompleted }.count
+        
+        let incompleteTasks = sorted.filter { !$0.isCompleted }
+        let overdueTasks = sorted.filter { !$0.isCompleted && $0.dueDate < today }
+        let next7DaysTasks = sorted.filter {
+            !$0.isCompleted && $0.dueDate >= today && $0.dueDate < next7DaysEnd
+        }
+        let completedTodayCount = sorted.filter {
+            $0.isCompleted && ($0.completedAt.map { calendar.isDate($0, inSameDayAs: today) } ?? false)
+        }.count
         
         var lines: [String] = []
+        lines.append("Local task snapshot generated right before this request. Treat it as the source of truth for current app state.")
+        lines.append("### Snapshot Summary")
+        lines.append("- Total tasks: \(sorted.count)")
+        lines.append("- Incomplete tasks: \(incompleteTasks.count)")
+        lines.append("- Overdue tasks: \(overdueTasks.count)")
+        lines.append("- Tasks due in next 7 days: \(next7DaysTasks.count)")
+        lines.append("- Completed today: \(completedTodayCount)")
         
-        // Today
-        lines.append("### Today's Tasks (\(dateFormatter.string(from: today)))")
-        if todayTasks.isEmpty {
-            lines.append("  No tasks")
-        } else {
-            for task in todayTasks {
-                lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
-            }
-        }
+        appendTaskSection(
+            title: "Today's Tasks (\(dateFormatter.string(from: today)))",
+            tasks: todayTasks,
+            lines: &lines,
+            dateFormatter: dateFormatter,
+            timeFormatter: timeFormatter,
+            emptyMessage: "No tasks scheduled for today."
+        )
         
-        // Mentioned dates
+        appendTaskSection(
+            title: "Tomorrow's Tasks (\(dateFormatter.string(from: tomorrow)))",
+            tasks: tomorrowTasks,
+            lines: &lines,
+            dateFormatter: dateFormatter,
+            timeFormatter: timeFormatter,
+            emptyMessage: "No tasks scheduled for tomorrow."
+        )
+        
         if !mentionedDateTasks.isEmpty {
-            lines.append("### Tasks on Mentioned Dates")
-            for task in mentionedDateTasks {
-                lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
-            }
+            appendTaskSection(
+                title: "Tasks on Dates Mentioned by the User",
+                tasks: mentionedDateTasks,
+                lines: &lines,
+                dateFormatter: dateFormatter,
+                timeFormatter: timeFormatter,
+                emptyMessage: Optional<String>.none
+            )
         }
         
-        // Recently discussed
         if !recentTasks.isEmpty {
-            lines.append("### Recently Discussed Tasks")
-            for task in recentTasks {
-                lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
-            }
+            appendTaskSection(
+                title: "Recently Discussed Tasks",
+                tasks: recentTasks,
+                lines: &lines,
+                dateFormatter: dateFormatter,
+                timeFormatter: timeFormatter,
+                emptyMessage: Optional<String>.none
+            )
         }
         
-        // Summary of the rest
         if !otherTasks.isEmpty {
-            lines.append("### Other Tasks Summary")
-            lines.append("  Incomplete: \(otherIncomplete.count)")
-            if overdueCount > 0 {
-                lines.append("  Overdue: \(overdueCount)")
+            lines.append("### Remaining Task Summary")
+            let grouped = Dictionary(grouping: otherTasks) { calendar.startOfDay(for: $0.dueDate) }
+            for date in grouped.keys.sorted() {
+                let tasks = grouped[date, default: []]
+                let incompleteCount = tasks.filter { !$0.isCompleted }.count
+                let completedCount = tasks.count - incompleteCount
+                lines.append("- \(dateFormatter.string(from: date)): \(tasks.count) task(s), \(incompleteCount) incomplete, \(completedCount) completed")
             }
-            lines.append("  Total: \(vm.todos.count) tasks")
         }
         
         return lines.joined(separator: "\n")
+    }
+
+    private func appendTaskSection(
+        title: String,
+        tasks: [TodoTask],
+        lines: inout [String],
+        dateFormatter: DateFormatter,
+        timeFormatter: DateFormatter,
+        emptyMessage: String?
+    ) {
+        lines.append("### \(title)")
+        if tasks.isEmpty {
+            if let emptyMessage {
+                lines.append("- \(emptyMessage)")
+            }
+            return
+        }
+        
+        for task in tasks {
+            lines.append(formatTask(task, dateFormatter: dateFormatter, timeFormatter: timeFormatter))
+        }
     }
     
     /// Extract dates referenced in user message (Chinese natural language + ISO format)
@@ -425,6 +485,7 @@ class ChatService: ObservableObject {
         streamingText = ""
         lastError = nil
         executedActions = []
+    fallbackAssistantReply = nil
         lastUserMessage = userMessage
         
         // Refresh system prompt with latest task context
@@ -461,6 +522,15 @@ class ChatService: ObservableObject {
             for action in validatedActions {
                 executeAction(action)
             }
+
+            if !validatedActions.isEmpty,
+               let fallbackAssistantReply,
+               !fallbackAssistantReply.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                let displayResponse = stripHiddenBlocks(from: fullResponse)
+                streamingText = [displayResponse, fallbackAssistantReply]
+                    .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    .joined(separator: displayResponse.isEmpty ? "" : "\n\n")
+            }
             
             // NEW: Update recently mentioned tasks
             updateRecentlyMentionedTasks(from: fullResponse)
@@ -469,7 +539,9 @@ class ChatService: ObservableObject {
             ChatMemoryStore.shared.extractPreferences(from: userMessage, aiResponse: fullResponse)
             
             // Update streaming text one final time (clean version)
-            streamingText = stripHiddenBlocks(from: fullResponse)
+            if streamingText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                streamingText = stripHiddenBlocks(from: fullResponse)
+            }
             isLoading = false
         } catch {
             lastError = error.localizedDescription
@@ -501,6 +573,14 @@ class ChatService: ObservableObject {
                 return action
             case .invalid(let reason):
                 print("Action validation failed: \(reason)")
+                executedActions.append(ActionResult(
+                    icon: "exclamationmark.triangle.fill",
+                    label: "Blocked: \(reason)",
+                    taskId: nil,
+                    actionType: .warning,
+                    undoData: nil
+                ))
+                appendFallbackAssistantReply(for: action, reason: reason)
                 return nil
             }
         }
@@ -510,16 +590,28 @@ class ChatService: ObservableObject {
     private func validateAction(_ action: AIAction) -> ValidationResult {
         switch action {
         case .createTask(let data):
-            return validateTaskData(data)
+            if case .invalid(let reason) = validateTaskData(data) {
+                return .invalid(reason: reason)
+            }
+            return validateCreateConflict(for: data)
         case .createMultipleTasks(let dataList):
+            var simulatedTasks: [TodoTask] = []
             for data in dataList {
                 if case .invalid(let reason) = validateTaskData(data) {
                     return .invalid(reason: "Batch task '\(data.title)': \(reason)")
                 }
+                let simulatedTask = buildTodoTask(from: data)
+                if let conflictReason = conflictReasonForTask(simulatedTask, additionalTasks: simulatedTasks, excludingTaskId: Optional<UUID>.none) {
+                    return .invalid(reason: "Batch task '\(data.title)' conflicts: \(conflictReason)")
+                }
+                simulatedTasks.append(simulatedTask)
             }
             return .valid
-        case .updateTask(_, let data):
-            return validateTaskData(data)
+        case .updateTask(let id, let data):
+            if case .invalid(let reason) = validateTaskData(data) {
+                return .invalid(reason: reason)
+            }
+            return validateUpdateConflict(taskId: id, data: data)
         case .deleteTask(let id):
             if UUID(uuidString: id) == nil {
                 return .invalid(reason: "Invalid task ID: \(id)")
@@ -557,6 +649,29 @@ class ChatService: ObservableObject {
             }
         }
         
+        return .valid
+    }
+
+    private func validateCreateConflict(for data: AITaskData) -> ValidationResult {
+        let simulatedTask = buildTodoTask(from: data)
+        if let reason = conflictReasonForTask(simulatedTask) {
+            return .invalid(reason: "\"\(data.title)\" conflicts with an existing task: \(reason)")
+        }
+        return .valid
+    }
+
+    private func validateUpdateConflict(taskId: String, data: AITaskData) -> ValidationResult {
+        guard let vm = todoViewModel,
+              let uuid = UUID(uuidString: taskId),
+              let existing = vm.todos.first(where: { $0.id == uuid }) else {
+            return .invalid(reason: "Task to update was not found: \(taskId)")
+        }
+
+        var simulatedTask = existing
+        applyUpdates(data, to: &simulatedTask)
+        if let reason = conflictReasonForTask(simulatedTask, excludingTaskId: uuid) {
+            return .invalid(reason: "Updated task \"\(simulatedTask.title)\" conflicts with an existing task: \(reason)")
+        }
         return .valid
     }
     
@@ -936,7 +1051,7 @@ class ChatService: ObservableObject {
     
     // MARK: - Conflict Detection
     
-    /// Find all time-overlapping task pairs among given tasks
+    /// Find all time-overlapping task pairs among given tasks using deterministic front-end logic.
     private func findConflicts(among tasks: [TodoTask]) -> [(TodoTask, TodoTask)] {
         let timed = tasks.filter { $0.startTime != nil && $0.endTime != nil && !$0.isCompleted }
         var conflicts: [(TodoTask, TodoTask)] = []
@@ -947,8 +1062,8 @@ class ChatService: ObservableObject {
                 let a = timed[i], b = timed[j]
                 // Must be same day
                 guard calendar.isDate(a.dueDate, inSameDayAs: b.dueDate),
-                      let startA = a.startTime, let endA = a.endTime,
-                      let startB = b.startTime, let endB = b.endTime else { continue }
+                      let startA = normalizedTaskStart(for: a), let endA = normalizedTaskEnd(for: a),
+                      let startB = normalizedTaskStart(for: b), let endB = normalizedTaskEnd(for: b) else { continue }
                 // Overlap: startA < endB && startB < endA
                 if startA < endB && startB < endA {
                     conflicts.append((a, b))
@@ -962,14 +1077,216 @@ class ChatService: ObservableObject {
     private func checkActionConflicts(for taskId: UUID) -> [(TodoTask, TodoTask)] {
         guard let vm = todoViewModel,
               let target = vm.todos.first(where: { $0.id == taskId }) else { return [] }
-        guard target.startTime != nil && target.endTime != nil else { return [] }
+        guard normalizedTaskStart(for: target) != nil,
+              normalizedTaskEnd(for: target) != nil else { return [] }
         
         let others = vm.todos.filter { $0.id != taskId }
         let allRelevant = [target] + others
         return findConflicts(among: allRelevant).filter { $0.0.id == taskId || $0.1.id == taskId }
     }
     
-    /// Build conflict context string for system prompt
+    private func normalizedTaskStart(for task: TodoTask) -> Date? {
+        let calendar = Calendar.current
+        guard let startTime = task.startTime else { return nil }
+        let components = calendar.dateComponents([.hour, .minute, .second], from: startTime)
+        return calendar.date(bySettingHour: components.hour ?? 0, minute: components.minute ?? 0, second: components.second ?? 0, of: task.dueDate)
+    }
+    
+    private func normalizedTaskEnd(for task: TodoTask) -> Date? {
+        let calendar = Calendar.current
+        guard let endTime = task.endTime else { return nil }
+        let components = calendar.dateComponents([.hour, .minute, .second], from: endTime)
+        return calendar.date(bySettingHour: components.hour ?? 0, minute: components.minute ?? 0, second: components.second ?? 0, of: task.dueDate)
+    }
+
+    private func conflictReasonForTask(
+        _ task: TodoTask,
+        additionalTasks: [TodoTask] = [],
+        excludingTaskId: UUID? = nil
+    ) -> String? {
+        guard let vm = todoViewModel,
+              let taskStart = normalizedTaskStart(for: task),
+              let taskEnd = normalizedTaskEnd(for: task) else {
+            return nil
+        }
+
+        let calendar = Calendar.current
+        let candidates = (vm.todos + additionalTasks).filter {
+            !$0.isCompleted &&
+            $0.id != task.id &&
+            $0.id != excludingTaskId &&
+            calendar.isDate($0.dueDate, inSameDayAs: task.dueDate)
+        }
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+
+        for candidate in candidates {
+            guard let candidateStart = normalizedTaskStart(for: candidate),
+                  let candidateEnd = normalizedTaskEnd(for: candidate) else { continue }
+
+            if taskStart < candidateEnd && candidateStart < taskEnd {
+                return "overlaps with \"\(candidate.title)\" (\(timeFormatter.string(from: candidateStart))-\(timeFormatter.string(from: candidateEnd))) on the same day"
+            }
+        }
+
+        return nil
+    }
+
+    private func appendFallbackAssistantReply(for action: AIAction, reason: String) {
+        switch action {
+        case .createTask(let data):
+            let task = buildTodoTask(from: data)
+            fallbackAssistantReply = buildConflictProposalReply(for: task, reason: reason)
+        case .updateTask(let id, let data):
+            guard let vm = todoViewModel,
+                  let uuid = UUID(uuidString: id),
+                  let existing = vm.todos.first(where: { $0.id == uuid }) else {
+                fallbackAssistantReply = buildGenericBlockedReply(reason: reason)
+                return
+            }
+            var simulatedTask = existing
+            applyUpdates(data, to: &simulatedTask)
+            fallbackAssistantReply = buildConflictProposalReply(for: simulatedTask, reason: reason)
+        case .createMultipleTasks(let dataList):
+            let simulatedTasks = dataList.map(buildTodoTask(from:))
+            fallbackAssistantReply = buildBatchConflictProposalReply(tasks: simulatedTasks, reason: reason)
+        case .deleteTask, .completeTask:
+            fallbackAssistantReply = buildGenericBlockedReply(reason: reason)
+        }
+    }
+
+    private func buildGenericBlockedReply(reason: String) -> String {
+        "I found a conflict with your current schedule, so I didn't execute this action yet.\n\nReason: \(reason)"
+    }
+
+    private func buildConflictProposalReply(for task: TodoTask, reason: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+
+        let conflictDescription = conflictDescriptionForTask(task) ?? reason
+        let alternatives = suggestedAlternativeSlots(for: task, limit: 3)
+
+        var lines: [String] = []
+        lines.append("This plan conflicts with one of your current tasks, so I didn't create it yet.")
+        lines.append("")
+        lines.append("- Title: \(task.title)")
+        lines.append("- Date: \(dateFormatter.string(from: task.dueDate))")
+        if let start = normalizedTaskStart(for: task), let end = normalizedTaskEnd(for: task) {
+            lines.append("- Time: \(timeFormatter.string(from: start)) - \(timeFormatter.string(from: end))")
+        }
+        lines.append("- Conflict: \(conflictDescription)")
+
+        if !alternatives.isEmpty {
+            lines.append("")
+            lines.append("I can move it to one of these time slots:")
+            for option in alternatives {
+                lines.append("- \(option.label)")
+            }
+        } else {
+            lines.append("")
+            lines.append("I couldn't find a nearby available slot yet. If you want, give me a different time and I'll help schedule it.")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    private func buildBatchConflictProposalReply(tasks: [TodoTask], reason: String) -> String {
+        let titles = tasks.map(\.title).joined(separator: ", ")
+        return "There is a time conflict in this set of tasks, so I didn't create them yet.\n\nAffected tasks: \(titles)\nReason: \(reason)\n\nIf you'd like, I can help rearrange them into non-conflicting time slots."
+    }
+
+    private func conflictDescriptionForTask(_ task: TodoTask) -> String? {
+        guard let vm = todoViewModel,
+              let taskStart = normalizedTaskStart(for: task),
+              let taskEnd = normalizedTaskEnd(for: task) else {
+            return nil
+        }
+
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+        let calendar = Calendar.current
+
+        for existing in vm.todos where !existing.isCompleted && existing.id != task.id {
+            guard calendar.isDate(existing.dueDate, inSameDayAs: task.dueDate),
+                  let existingStart = normalizedTaskStart(for: existing),
+                  let existingEnd = normalizedTaskEnd(for: existing) else { continue }
+
+            if taskStart < existingEnd && existingStart < taskEnd {
+                return "It overlaps with \"\(existing.title)\" (\(timeFormatter.string(from: existingStart)) - \(timeFormatter.string(from: existingEnd)))."
+            }
+        }
+
+        return nil
+    }
+
+    private struct SuggestedTimeSlot {
+        let start: Date
+        let end: Date
+
+        var label: String {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "HH:mm"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+    }
+
+    private func suggestedAlternativeSlots(for task: TodoTask, limit: Int) -> [SuggestedTimeSlot] {
+        guard let vm = todoViewModel,
+              let originalStart = normalizedTaskStart(for: task),
+              let originalEnd = normalizedTaskEnd(for: task) else {
+            return []
+        }
+
+        let duration = originalEnd.timeIntervalSince(originalStart)
+        guard duration > 0 else { return [] }
+
+        let calendar = Calendar.current
+        let dayStart = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: task.dueDate) ?? calendar.startOfDay(for: task.dueDate)
+        let dayEnd = calendar.date(bySettingHour: 22, minute: 0, second: 0, of: task.dueDate) ?? task.dueDate
+
+        let busySlots = vm.todos
+            .filter { !$0.isCompleted && calendar.isDate($0.dueDate, inSameDayAs: task.dueDate) && $0.id != task.id }
+            .compactMap { existing -> SuggestedTimeSlot? in
+                guard let start = normalizedTaskStart(for: existing),
+                      let end = normalizedTaskEnd(for: existing) else { return nil }
+                return SuggestedTimeSlot(start: start, end: end)
+            }
+            .sorted { $0.start < $1.start }
+
+        var freeSlots: [SuggestedTimeSlot] = []
+        var cursor = dayStart
+
+        for busy in busySlots {
+            if busy.start.timeIntervalSince(cursor) >= duration {
+                freeSlots.append(SuggestedTimeSlot(start: cursor, end: cursor.addingTimeInterval(duration)))
+            }
+            if busy.end > cursor {
+                cursor = busy.end
+            }
+        }
+
+        if dayEnd.timeIntervalSince(cursor) >= duration {
+            freeSlots.append(SuggestedTimeSlot(start: cursor, end: cursor.addingTimeInterval(duration)))
+        }
+
+        let sortedByProximity = freeSlots.sorted {
+            abs($0.start.timeIntervalSince(originalStart)) < abs($1.start.timeIntervalSince(originalStart))
+        }
+
+        var deduped: [SuggestedTimeSlot] = []
+        for slot in sortedByProximity {
+            if deduped.contains(where: { $0.start == slot.start && $0.end == slot.end }) { continue }
+            deduped.append(slot)
+            if deduped.count >= limit { break }
+        }
+
+        return deduped
+    }
+    
+    /// Build app-computed conflict context string for the system prompt.
     private func buildConflictContext() -> String {
         guard let vm = todoViewModel else { return "" }
         let conflicts = findConflicts(among: vm.todos)
@@ -979,16 +1296,25 @@ class ChatService: ObservableObject {
         timeFormatter.dateFormat = "HH:mm"
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
+        let calendar = Calendar.current
+        let grouped = Dictionary(grouping: conflicts) { calendar.startOfDay(for: $0.0.dueDate) }
         
-        var lines = ["## ⚠️ Current Time Conflicts:"]
-        for (a, b) in conflicts {
-            let aStart = a.startTime.map { timeFormatter.string(from: $0) } ?? "?"
-            let aEnd = a.endTime.map { timeFormatter.string(from: $0) } ?? "?"
-            let bStart = b.startTime.map { timeFormatter.string(from: $0) } ?? "?"
-            let bEnd = b.endTime.map { timeFormatter.string(from: $0) } ?? "?"
-            lines.append("- \"\(a.title)\"(\(aStart)-\(aEnd)) conflicts with \"\(b.title)\"(\(bStart)-\(bEnd)) on \(dateFormatter.string(from: a.dueDate))")
+        var lines = [
+            "## ⚠️ App-Detected Time Conflicts",
+            "The following overlaps were computed by the app using deterministic time-range checks. Do not recalculate them; use them as trusted scheduling constraints."
+        ]
+        
+        for date in grouped.keys.sorted() {
+            lines.append("### \(dateFormatter.string(from: date))")
+            for (a, b) in grouped[date, default: []].prefix(8) {
+                let aStart = normalizedTaskStart(for: a).map { timeFormatter.string(from: $0) } ?? "?"
+                let aEnd = normalizedTaskEnd(for: a).map { timeFormatter.string(from: $0) } ?? "?"
+                let bStart = normalizedTaskStart(for: b).map { timeFormatter.string(from: $0) } ?? "?"
+                let bEnd = normalizedTaskEnd(for: b).map { timeFormatter.string(from: $0) } ?? "?"
+                lines.append("- \"\(a.title)\" (ID: \(a.id.uuidString), \(aStart)-\(aEnd)) overlaps with \"\(b.title)\" (ID: \(b.id.uuidString), \(bStart)-\(bEnd))")
+            }
         }
-        lines.append("Avoid these time slots when planning new tasks, or suggest adjustments to the user.")
+        lines.append("Avoid these occupied intervals when proposing or creating new tasks. If needed, suggest moving one of the conflicting tasks.")
         return lines.joined(separator: "\n")
     }
     
