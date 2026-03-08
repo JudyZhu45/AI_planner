@@ -40,28 +40,29 @@ struct MessageBubble: View {
     let message: Message
     var onCopy: (() -> Void)?
     var onDelete: (() -> Void)?
-    
+    var onReport: (() -> Void)?
+
     var isUserMessage: Bool {
         message.sender == .user
     }
-    
+
     var timeString: String {
         let formatter = DateFormatter()
         formatter.dateFormat = "h:mm a"
         return formatter.string(from: message.timestamp)
     }
-    
+
     var body: some View {
         HStack(alignment: .bottom, spacing: AppTheme.Spacing.sm) {
             if !isUserMessage {
                 // AI avatar
                 aiAvatar
             }
-            
+
             if isUserMessage {
                 Spacer(minLength: 60)
             }
-            
+
             VStack(alignment: isUserMessage ? .trailing : .leading, spacing: AppTheme.Spacing.xs) {
                 if message.content.isEmpty && message.isStreaming {
                     // Streaming placeholder — animated dots
@@ -107,7 +108,15 @@ struct MessageBubble: View {
                             } label: {
                                 Label("Copy", systemImage: "doc.on.doc")
                             }
-                            
+
+                            if !isUserMessage && !message.isStreaming && !message.isError {
+                                Button {
+                                    onReport?()
+                                } label: {
+                                    Label("Report response", systemImage: "flag")
+                                }
+                            }
+
                             Button(role: .destructive) {
                                 onDelete?()
                             } label: {
@@ -115,13 +124,40 @@ struct MessageBubble: View {
                             }
                         }
                 }
-                
-                Text(timeString)
-                    .font(.system(size: 9, weight: .regular))
-                    .foregroundColor(AppTheme.textTertiary)
-                    .padding(.horizontal, isUserMessage ? AppTheme.Spacing.xs : 36)
+
+                // Bottom row: timestamp + report button (AI only)
+                HStack(spacing: AppTheme.Spacing.sm) {
+                    if isUserMessage { Spacer() }
+
+                    Text(timeString)
+                        .font(.system(size: 9, weight: .regular))
+                        .foregroundColor(AppTheme.textTertiary)
+
+                    // 👎 Report button — only for completed AI messages
+                    if !isUserMessage && !message.isStreaming && !message.isError && onReport != nil {
+                        Button {
+                            onReport?()
+                        } label: {
+                            HStack(spacing: 3) {
+                                Image(systemName: "flag")
+                                    .font(.system(size: 9, weight: .medium))
+                                Text("Report")
+                                    .font(.system(size: 9, weight: .medium))
+                            }
+                            .foregroundColor(AppTheme.textTertiary.opacity(0.7))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 3)
+                            .background(AppTheme.bgSecondary.opacity(0.6))
+                            .clipShape(Capsule())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    if !isUserMessage { Spacer() }
+                }
+                .padding(.horizontal, isUserMessage ? AppTheme.Spacing.xs : 36)
             }
-            
+
             if !isUserMessage {
                 Spacer(minLength: 60)
             }

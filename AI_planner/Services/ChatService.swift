@@ -315,6 +315,7 @@ class ChatService: ObservableObject {
         - When planning schedules, leave reasonable breaks/commute time between tasks
         - Check the existing tasks listed above to avoid creating time conflicts
         - If the requested time conflicts with existing tasks, explain the conflict, suggest alternatives, and wait for user decision. Do NOT output [ACTION] in this case.
+        - **Conflict resolution (CRITICAL)**: When the user confirms a conflict resolution (e.g., "push dinner back", "move the other task"), you MUST output ALL required [ACTION] blocks in the same reply — both the new task AND the update to the conflicting task. Never output only half the changes. Every task mentioned in your natural language plan must have a corresponding [ACTION] block.
         - If the user's request is unclear, ask for details before planning
         - Reference the user profile's peak hours and habits; prioritize important tasks during peak hours
         - Strictly follow constraints and preferences from user preference memory (e.g., if "doesn't like waking up early", don't schedule morning tasks)

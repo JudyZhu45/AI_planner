@@ -30,6 +30,10 @@ struct AIChatView: View {
     @State private var inputText = ""
     @FocusState private var isInputFocused: Bool
     @State private var micPulse = false
+
+    // Beta feedback
+    @State private var reportingMessage: Message? = nil  // the AI message being reported
+    @State private var showFeedbackSheet = false
     
     var body: some View {
         ZStack {
@@ -73,7 +77,11 @@ struct AIChatView: View {
                                         withAnimation {
                                             chatViewModel.deleteMessage(message)
                                         }
-                                    }
+                                    },
+                                    onReport: message.sender == .ai && !message.isStreaming && !message.isError ? {
+                                        reportingMessage = message
+                                        showFeedbackSheet = true
+                                    } : nil
                                 )
                                 .id(message.id)
                             }
@@ -136,6 +144,19 @@ struct AIChatView: View {
             }
         } message: {
             Text(speechService.errorMessage ?? "")
+        }
+        // Beta feedback sheet
+        .sheet(isPresented: $showFeedbackSheet) {
+            if let msg = reportingMessage {
+                // Find the user message immediately before this AI message
+                let aiIndex = chatViewModel.messages.firstIndex(where: { $0.id == msg.id }) ?? 0
+                let userMsg = aiIndex > 0 ? chatViewModel.messages[aiIndex - 1].content : ""
+                FeedbackReportSheet(
+                    userMessage: userMsg,
+                    aiResponse: msg.content,
+                    onDismiss: { showFeedbackSheet = false }
+                )
+            }
         }
     }
     
